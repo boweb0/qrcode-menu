@@ -190,3 +190,25 @@ footer .own:hover{color:var(--accent)}
 @media (prefers-reduced-motion:reduce){*{animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important}}
 
 .stage .spin{position:absolute;inset:0;cursor:grab;touch-action:none;user-select:none}.stage .spin:active{cursor:grabbing}.stage .spin img{width:100%;height:100%;object-fit:cover;pointer-events:none}
+
+/* ---- dil seçici ---- */
+.tr-end{display:flex;align-items:center;gap:8px}
+.lang{display:flex;padding:3px;border:1px solid var(--line);border-radius:99px;background:rgba(255,255,255,.04)}
+.lang button{padding:6px 9px;border-radius:99px;font:700 11px var(--body);letter-spacing:.06em;color:var(--mute);min-width:30px;transition:.2s}
+.lang button.on{background:var(--accent);color:#1a0b04}
+@media (max-width:380px){.open{display:none}}
+
+/* ---- Arapça / sağdan sola ---- */
+[dir=rtl] body,[dir=rtl] button,[dir=rtl] input,[dir=rtl] .brand b,[dir=rtl] .headline,[dir=rtl] h1,[dir=rtl] h2,[dir=rtl] h3,[dir=rtl] h4,[dir=rtl] .cat .lbl b,[dir=rtl] .pr b,[dir=rtl] .mark{font-family:'Cairo','Segoe UI',Tahoma,'Noto Sans Arabic',Arial,sans-serif}
+[dir=rtl] *{letter-spacing:0!important;text-transform:none!important}
+[dir=rtl] .headline{line-height:1.15}
+[dir=rtl] .cat,[dir=rtl] .fcard,[dir=rtl] .row{text-align:right}
+[dir=rtl] .cat .no{left:auto;right:16px}
+[dir=rtl] .cat .go{right:auto;left:12px;transform:scaleX(-1)}
+[dir=rtl] .cat .lbl{left:14px;right:16px}
+[dir=rtl] .back svg{transform:scaleX(-1)}
+[dir=rtl] .track{direction:ltr}
+[dir=rtl] .search svg{left:auto;right:18px}
+[dir=rtl] .search input{padding:16px 50px 16px 18px}
+[dir=rtl] .close{left:14px;right:auto}
+[dir=rtl] .lang,[dir=rtl] .lang button{font-family:'Segoe UI',Arial,sans-serif}

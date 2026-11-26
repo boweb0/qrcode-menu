@@ -44,7 +44,8 @@ window.Store = (function () {
   /* ---- dosya (asset) deposu ---- */
   function openDB() {
     return new Promise(function (res) {
-      try { var r = indexedDB.open(DBN, 1); r.onupgradeneeded = function () { r.result.createObjectStore(ST); }; r.onsuccess = function () { res(r.result); }; r.onerror = function () { res(null); }; } catch (e) { res(null); }
+      try { var r = indexedDB.open(DBN, 1); r.onupgradeneeded = function () { r.result.createObjectStore(ST); }; r.onsuccess = function () { res(r.result); }; r.onerror = function () { res(null); }; r.onblocked = function () { res(null); }; } catch (e) { res(null); }
+      setTimeout(function () { res(null); }, 1500);
     });
   }
   function ready() {
@@ -52,6 +53,7 @@ window.Store = (function () {
     readyP = openDB().then(function (d) {
       db = d; if (!db) return;
       return new Promise(function (res) {
+        setTimeout(res, 2500);
         try {
           var req = db.transaction(ST, 'readonly').objectStore(ST).openCursor();
           req.onsuccess = function () { var c = req.result; if (c) { blobs[c.key] = c.value; urls[c.key] = URL.createObjectURL(c.value); c.continue(); } else res(); };
@@ -59,6 +61,7 @@ window.Store = (function () {
         } catch (e) { res(); }
       });
     });
+    readyP = readyP.catch(function () { db = null; });
     return readyP;
   }
   function putAsset(path, blob) {

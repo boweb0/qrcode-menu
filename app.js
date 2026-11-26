@@ -10,14 +10,37 @@
   var prodById = function (id) { return D.products.filter(function (p) { return p.id === id; })[0]; };
   var visible = function (p) { return p.available !== false; };
 
-  function money(v) { var n = Number(v); return (Number.isInteger(n) ? String(n) : n.toFixed(2).replace('.', ',')) + ' ' + (S.currency || '₺'); }
+  var L = 'tr', LANGS = [['tr', 'TR'], ['en', 'EN'], ['ar', 'ع']];
+  var UI = {
+    tr: { nw: 'Yeni', camp: 'Kampanya', off: function (x) { return '%' + x + ' indirim'; }, open: 'Açık', none: 'Sonuç bulunamadı', items: 'ürün', cats: 'Kategoriler', secs: 'bölüm', ing: 'İçindekiler', back: 'Geri', close: 'Kapat', empty: 'Bu kategoride henüz ürün yok', admin: 'Yönetim', tel: 'Tel' },
+    en: { nw: 'New', camp: 'Deal', off: function (x) { return x + '% off'; }, open: 'Open', none: 'No results found', items: 'items', cats: 'Categories', secs: 'sections', ing: 'Ingredients', back: 'Back', close: 'Close', empty: 'No products in this category yet', admin: 'Admin', tel: 'Tel' },
+    ar: { nw: 'جديد', camp: 'عرض', off: function (x) { return 'خصم ' + x + '%'; }, open: 'مفتوح', none: 'لا توجد نتائج', items: 'منتج', cats: 'الأقسام', secs: 'قسم', ing: 'المكونات', back: 'رجوع', close: 'إغلاق', empty: 'لا توجد منتجات في هذا القسم بعد', admin: 'الإدارة', tel: 'هاتف' }
+  };
+  var t = function (k) { var v = (UI[L] || UI.tr)[k]; return v === undefined ? UI.tr[k] : v; };
+  function tx(o, k) { if (L !== 'tr') { var i = o.i18n && o.i18n[L], v = i && i[k]; if (v != null && v !== '' && !(Array.isArray(v) && !v.length)) return v; } return o[k]; }
+  function enabledLangs() { var l = (S && S.langs) || ['tr', 'en', 'ar']; return LANGS.filter(function (x) { return l.indexOf(x[0]) > -1; }); }
+  function pickLang() {
+    var s = null; try { s = localStorage.getItem('qrmenu_lang'); } catch (e) { }
+    var ok = enabledLangs().map(function (x) { return x[0]; });
+    if (s && ok.indexOf(s) > -1) return s;
+    var nav = ((navigator.language || 'tr') + '').slice(0, 2).toLowerCase();
+    if (nav !== 'tr' && ok.indexOf(nav) > -1) return nav;
+    if (nav !== 'tr' && ok.indexOf('en') > -1) return 'en';
+    var d = S.defaultLang || 'tr'; return ok.indexOf(d) > -1 ? d : (ok[0] || 'tr');
+  }
+  function applyLang() { var h = document.documentElement; h.lang = L; h.dir = L === 'ar' ? 'rtl' : 'ltr'; }
+  function money(v, usd) {
+    if (L === 'tr') { var n = Number(v); return (Number.isInteger(n) ? String(n) : n.toFixed(2).replace('.', ',')) + ' ' + (S.currency || '₺'); }
+    var u = usd > 0 ? Number(usd) : Math.max(0.25, Math.round(Number(v) / (Number(S.usdRate) || 43) * 4) / 4);
+    return '<bdi>$' + (Number.isInteger(u) ? String(u) : u.toFixed(2)) + '</bdi>';
+  }
   function onSale(p) { return p.salePrice && Number(p.salePrice) > 0 && Number(p.salePrice) < Number(p.price); }
-  function priceHtml(p) { return onSale(p) ? '<div class="pr"><b class="sale">' + money(p.salePrice) + '</b><s>' + money(p.price) + '</s></div>' : '<div class="pr"><b>' + money(p.price) + '</b></div>'; }
+  function priceHtml(p) { return onSale(p) ? '<div class="pr"><b class="sale">' + money(p.salePrice, p.salePriceUSD) + '</b><s>' + money(p.price, p.priceUSD) + '</s></div>' : '<div class="pr"><b>' + money(p.price, p.priceUSD) + '</b></div>'; }
   function badges(p) {
     var h = '';
-    if (p.isNew) h += '<span class="badge new">Yeni</span>';
-    if (p.isCampaign) h += '<span class="badge camp">Kampanya</span>';
-    if (onSale(p)) h += '<span class="badge off">%' + Math.round((1 - p.salePrice / p.price) * 100) + ' indirim</span>';
+    if (p.isNew) h += '<span class="badge new">' + t('nw') + '</span>';
+    if (p.isCampaign) h += '<span class="badge camp">' + t('camp') + '</span>';
+    if (onSale(p)) h += '<span class="badge off">' + t('off')(Math.round((1 - p.salePrice / p.price) * 100)) + '</span>';
     return h ? '<div class="badges">' + h + '</div>' : '';
   }
   var mainImg = function (p) { return p.images && p.images[0] ? p.images[0] : ''; };
@@ -31,7 +54,7 @@
     rot: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-3-6.7"/><path d="M21 4v5h-5"/></svg>'
   };
 
-  function applyTheme() { document.documentElement.style.setProperty('--accent', S.accent || '#ff6a2b'); document.title = (S.businessName || 'Menü') + ' • Menü'; }
+  function applyTheme() { document.documentElement.style.setProperty('--accent', S.accent || '#ff6a2b'); document.title = (tx(S, 'businessName') || 'Menü') + ' • ' + (tx(S, 'categoriesTitle') || 'Menü'); applyLang(); }
 
   /* reveal + tilt */
   function observe() {
@@ -53,30 +76,34 @@
   /* ---------- sayfalar ---------- */
   function productRow(p, i) {
     var img = mainImg(p);
-    return '<button class="row rv' + (visible(p) ? '' : ' out') + '" data-p="' + esc(p.id) + '" style="--d:' + (i % 6 * 70) + 'ms"><div class="ph">' + (img ? '<img src="' + esc(U(img)) + '" alt="" loading="lazy">' : '') + (p.model ? '<span class="t3">3D</span>' : '') + '</div>' +
-      '<div class="info"><h3>' + esc(p.name) + '</h3><p>' + esc(p.desc) + '</p>' + badges(p) + '<div class="foot">' + priceHtml(p) + '</div></div></button>';
+    return '<button class="row rv' + (visible(p) ? '' : ' out') + '" data-p="' + esc(p.id) + '" style="--d:' + (i % 6 * 70) + 'ms"><div class="ph">' + (img ? '<img src="' + esc(U(img)) + '" alt="" loading="lazy">' : '') + '</div>' +
+      '<div class="info"><h3>' + esc(tx(p, 'name')) + '</h3><p>' + esc(tx(p, 'desc')) + '</p>' + badges(p) + '<div class="foot">' + priceHtml(p) + '</div></div></button>';
   }
   function footer() {
     var l = [];
-    if (S.phone) l.push('Tel · ' + esc(S.phone)); if (S.instagram) l.push(esc(S.instagram)); if (S.wifi) l.push(esc(S.wifi));
-    return '<footer>' + (l.length ? '<div class="lk">' + l.map(function (x) { return '<span>' + x + '</span>'; }).join('') + '</div>' : '') + (S.address ? esc(S.address) + '<br>' : '') + esc(S.footerText || '') + '<br><a class="own" href="#yonetim">Yönetim</a></footer>';
+    if (S.phone) l.push(t('tel') + ' · <bdi>' + esc(S.phone) + '</bdi>'); if (S.instagram) l.push(esc(S.instagram)); if (tx(S, 'wifi')) l.push(esc(tx(S, 'wifi')));
+    return '<footer>' + (l.length ? '<div class="lk">' + l.map(function (x) { return '<span>' + x + '</span>'; }).join('') + '</div>' : '') + (tx(S, 'address') ? esc(tx(S, 'address')) + '<br>' : '') + esc(tx(S, 'footerText') || '') + '<br><a class="own" href="#yonetim">' + t('admin') + '</a></footer>';
+  }
+  function langSwitch() {
+    var ls = enabledLangs(); if (ls.length < 2) return '';
+    return '<div class="lang" role="group" aria-label="Language">' + ls.map(function (x) { return '<button data-lang="' + x[0] + '"' + (x[0] === L ? ' class="on"' : '') + '>' + x[1] + '</button>'; }).join('') + '</div>';
   }
   function topbar() {
-    return '<div class="top"><div class="brand"><div class="mark">' + esc(S.logoText || (S.businessName || 'M').slice(0, 2)) + '</div><div><b>' + esc(S.businessName) + '</b><small>' + esc(S.tagline) + '</small></div></div><div class="open"><i></i>Açık</div></div>';
+    return '<div class="top"><div class="brand"><div class="mark">' + esc(S.logoText || (S.businessName || 'M').slice(0, 2)) + '</div><div><b>' + esc(tx(S, 'businessName')) + '</b><small>' + esc(tx(S, 'tagline')) + '</small></div></div><div class="tr-end">' + langSwitch() + '<div class="open"><i></i>' + t('open') + '</div></div></div>';
   }
 
   function renderHome() {
     var feat = D.products.filter(function (p) { return visible(p) && (p.isNew || p.isCampaign || onSale(p)); });
-    var mq = esc(S.marquee || '').replace(/•/g, '<b>•</b>');
+    var mq = esc(tx(S, 'marquee') || '').replace(/•/g, '<b>•</b>');
     app.innerHTML = topbar() +
-      '<h1 class="headline"><span><em>' + esc(S.categoriesTitle || 'Menü') + '</em></span><span><em>' + esc(S.businessName) + '</em></span></h1>' +
-      (S.marquee ? '<div class="marquee"><div class="track"><span>' + mq + mq + '</span><span>' + mq + mq + '</span></div></div>' : '') +
-      '<div class="search">' + ic.search + '<input id="q" type="search" placeholder="' + esc(S.searchPlaceholder) + '" autocomplete="off"></div><div id="home-body">' + homeBody(feat) + '</div>' + footer();
+      '<h1 class="headline"><span><em>' + esc(tx(S, 'categoriesTitle') || 'Menü') + '</em></span><span><em>' + esc(tx(S, 'businessName')) + '</em></span></h1>' +
+      (tx(S, 'marquee') ? '<div class="marquee"><div class="track"><span>' + mq + mq + '</span><span>' + mq + mq + '</span></div></div>' : '') +
+      '<div class="search">' + ic.search + '<input id="q" type="search" placeholder="' + esc(tx(S, 'searchPlaceholder')) + '" autocomplete="off"></div><div id="home-body">' + homeBody(feat) + '</div>' + footer();
     document.getElementById('q').addEventListener('input', function (e) {
-      var q = e.target.value.trim().toLocaleLowerCase('tr'), box = document.getElementById('home-body');
+      var q = e.target.value.trim().toLocaleLowerCase(L), box = document.getElementById('home-body');
       if (!q) { box.innerHTML = homeBody(feat); observe(); tilt(); return; }
-      var res = D.products.filter(function (p) { return visible(p) && (p.name + ' ' + p.desc + ' ' + p.ingredients.join(' ')).toLocaleLowerCase('tr').indexOf(q) > -1; });
-      box.innerHTML = res.length ? '<div class="list">' + res.map(productRow).join('') + '</div>' : '<div class="empty">Sonuç bulunamadı</div>';
+      var res = D.products.filter(function (p) { return visible(p) && (p.name + ' ' + p.desc + ' ' + p.ingredients.join(' ') + ' ' + tx(p, 'name') + ' ' + tx(p, 'desc') + ' ' + (tx(p, 'ingredients') || []).join(' ')).toLocaleLowerCase(L).indexOf(q) > -1; });
+      box.innerHTML = res.length ? '<div class="list">' + res.map(productRow).join('') + '</div>' : '<div class="empty">' + t('none') + '</div>';
       observe();
     });
     observe(); tilt(); window.scrollTo(0, 0);
@@ -84,22 +111,22 @@
   function homeBody(feat) {
     var h = '';
     if (S.showFeatured !== false && feat.length) {
-      h += '<div class="sec"><h2>' + esc(S.featuredTitle) + '</h2><span>' + feat.length + ' ürün</span></div><div class="rail">' + feat.map(function (p) {
-        return '<button class="fcard" data-p="' + esc(p.id) + '"><img src="' + esc(U(mainImg(p))) + '" alt="" loading="lazy">' + badges(p) + '<div class="in"><b>' + esc(p.name) + '</b>' + priceHtml(p) + '</div></button>';
+      h += '<div class="sec"><h2>' + esc(tx(S, 'featuredTitle')) + '</h2><span>' + feat.length + ' ' + t('items') + '</span></div><div class="rail">' + feat.map(function (p) {
+        return '<button class="fcard" data-p="' + esc(p.id) + '"><img src="' + esc(U(mainImg(p))) + '" alt="" loading="lazy">' + badges(p) + '<div class="in"><b>' + esc(tx(p, 'name')) + '</b>' + priceHtml(p) + '</div></button>';
       }).join('') + '</div>';
     }
-    h += '<div class="sec"><h2>Kategoriler</h2><span>' + D.categories.length + ' bölüm</span></div><div class="cat-grid">' + D.categories.map(function (c, i) {
+    h += '<div class="sec"><h2>' + t('cats') + '</h2><span>' + D.categories.length + ' ' + t('secs') + '</span></div><div class="cat-grid">' + D.categories.map(function (c, i) {
       var n = D.products.filter(function (p) { return p.categoryId === c.id && visible(p); }).length;
-      return '<button class="cat rv" data-c="' + esc(c.id) + '" style="--d:' + (i % 2 * 90 + Math.floor(i / 2) * 60) + 'ms"><img src="' + esc(U(c.image)) + '" alt="" loading="lazy"><span class="no">' + String(i + 1).padStart(2, '0') + '</span><span class="go">' + ic.go + '</span><span class="lbl"><b>' + esc(c.name) + '</b><small>' + n + ' ürün</small></span></button>';
+      return '<button class="cat rv" data-c="' + esc(c.id) + '" style="--d:' + (i % 2 * 90 + Math.floor(i / 2) * 60) + 'ms"><img src="' + esc(U(c.image)) + '" alt="" loading="lazy"><span class="no">' + String(i + 1).padStart(2, '0') + '</span><span class="go">' + ic.go + '</span><span class="lbl"><b>' + esc(tx(c, 'name')) + '</b><small>' + n + ' ' + t('items') + '</small></span></button>';
     }).join('') + '</div>';
     return h;
   }
   function renderCategory(id) {
     var c = catById(id); if (!c) { location.hash = ''; return; }
     var items = D.products.filter(function (p) { return p.categoryId === id; });
-    app.innerHTML = '<div class="bar"><div class="bar-row"><button class="back" data-back aria-label="Geri">' + ic.back + '</button><h2>' + esc(c.name) + '</h2></div><div class="chips">' +
-      D.categories.map(function (x) { return '<button class="chip' + (x.id === id ? ' on' : '') + '" data-c="' + esc(x.id) + '">' + esc(x.name) + '</button>'; }).join('') + '</div></div>' +
-      '<div class="list">' + (items.length ? items.map(productRow).join('') : '<div class="empty">Bu kategoride henüz ürün yok</div>') + '</div>' + footer();
+    app.innerHTML = '<div class="bar"><div class="bar-row"><button class="back" data-back aria-label="' + t('back') + '">' + ic.back + '</button><h2>' + esc(tx(c, 'name')) + '</h2></div><div class="chips">' +
+      D.categories.map(function (x) { return '<button class="chip' + (x.id === id ? ' on' : '') + '" data-c="' + esc(x.id) + '">' + esc(tx(x, 'name')) + '</button>'; }).join('') + '</div></div>' +
+      '<div class="list">' + (items.length ? items.map(productRow).join('') : '<div class="empty">' + t('empty') + '</div>') + '</div>' + footer();
     var on = app.querySelector('.chip.on'); if (on && on.scrollIntoView) on.scrollIntoView({ inline: 'center', block: 'nearest' });
     observe(); window.scrollTo(0, 0);
   }
@@ -156,11 +183,11 @@
     loadPreviewModel(p, function () {
       var modes = [], first = 'photo', hasM = false;
       var thumbs = (p.images || []).length > 1 ? '<div class="thumbs" id="thumbs">' + p.images.map(function (s, i) { return '<button class="thumb' + (i ? '' : ' on') + '" data-img="' + i + '"><img src="' + esc(U(s)) + '" alt=""></button>'; }).join('') + '</div>' : '';
-      sheet.innerHTML = '<div class="sheet-bg" data-close></div><div class="sheet"><button class="close" data-close aria-label="Kapat">' + ic.close + '</button>' +
+      sheet.innerHTML = '<div class="sheet-bg" data-close></div><div class="sheet"><button class="close" data-close aria-label="' + t('close') + '">' + ic.close + '</button>' +
         '<div class="stage" id="stage">' + (modes.length > 1 ? '<div class="seg">' + modes.map(function (m, i) { return '<button' + (i ? '' : ' class="on"') + ' data-mode="' + m[0] + '">' + m[1] + '</button>'; }).join('') + '</div>' : '') + '<div id="stage-in" style="position:absolute;inset:0"></div>' +
         (hasM ? '<model-viewer id="armv" ' + mvAttrs(p, false) + ' style="position:absolute;width:2px;height:2px;opacity:0;pointer-events:none;left:0;top:0"><button slot="ar-button" style="display:none"></button></model-viewer>' : '') + '</div>' + thumbs +
-        '<div class="pbody">' + badges(p) + '<h2>' + esc(p.name) + '</h2>' + priceHtml(p) + (p.desc ? '<p>' + esc(p.desc) + '</p>' : '') +
-        (p.ingredients.length ? '<h4>İçindekiler</h4><div class="ing">' + p.ingredients.map(function (x) { return '<span>' + esc(x) + '</span>'; }).join('') + '</div>' : '') +
+        '<div class="pbody">' + badges(p) + '<h2>' + esc(tx(p, 'name')) + '</h2>' + priceHtml(p) + (tx(p, 'desc') ? '<p>' + esc(tx(p, 'desc')) + '</p>' : '') +
+        ((tx(p, 'ingredients') || []).length ? '<h4>' + t('ing') + '</h4><div class="ing">' + tx(p, 'ingredients').map(function (x) { return '<span>' + esc(x) + '</span>'; }).join('') + '</div>' : '') +
         (false ? '<button class="ar-btn" data-ar="' + esc(p.id) + '">' + ic.cube + ' ' + esc(S.arButtonText || 'Masanda Gör') + '</button><div class="ar-note">Telefon kamerasıyla ürünü masanda gör</div>' : '') + '</div></div>';
       sheet.dataset.pid = p.id; sheet.classList.add('on'); document.body.style.overflow = 'hidden'; setStage(p, first, 0);
     });
@@ -173,7 +200,7 @@
     var p = prodById(id); if (!p) return;
     var src = U(p.cutout || mainImg(p));
     arEl.innerHTML = '<div class="nocam"></div><video playsinline muted autoplay></video><div class="item" id="ar-item"><img src="' + esc(src) + '" alt=""></div>' +
-      '<div class="top2"><b>' + esc(p.name) + '</b><button id="ar-close" aria-label="Kapat">' + ic.close + '</button></div><div class="tip" id="ar-tip">Kamerayı masanıza doğrultun · Sürükleyin, iki parmakla büyütün/döndürün</div>' +
+      '<div class="top2"><b>' + esc(p.name) + '</b><button id="ar-close" aria-label="' + t('close') + '">' + ic.close + '</button></div><div class="tip" id="ar-tip">Kamerayı masanıza doğrultun · Sürükleyin, iki parmakla büyütün/döndürün</div>' +
       '<div class="panel"><label><span>Boyut</span><input type="range" id="ar-size" min="30" max="260" value="100"></label><label><span>Döndür</span><input type="range" id="ar-rot" min="-40" max="40" value="0"></label><label><span>Şeffaflık</span><input type="range" id="ar-op" min="35" max="100" value="96"></label></div>';
     arEl.classList.add('on');
     var video = arEl.querySelector('video'), nocam = arEl.querySelector('.nocam'), item = document.getElementById('ar-item'), tip = document.getElementById('ar-tip');
@@ -221,9 +248,11 @@
     closeSheetUI();
     if ((m = h.match(/^#c-(.+)$/))) renderCategory(decodeURIComponent(m[1])); else renderHome();
   }
+  function setLang(l) { L = l; try { localStorage.setItem('qrmenu_lang', l); } catch (e) { } applyTheme(); route(); }
   function go(h) { internalNav = true; location.hash = h; }
 
   document.addEventListener('click', function (e) {
+    var lb = e.target.closest('[data-lang]'); if (lb) { setLang(lb.dataset.lang); return; }
     var t = e.target.closest('[data-p],[data-c],[data-back],[data-close],[data-ar],[data-img],[data-mode]'); if (!t) return;
     if (t.dataset.mode) { var p0 = prodById(sheet.dataset.pid); [].forEach.call(document.querySelectorAll('.seg button'), function (b) { b.classList.toggle('on', b === t); }); setStage(p0, t.dataset.mode, 0); return; }
     if (t.dataset.ar) { var mv = document.getElementById('armv'); if (mv && mv.canActivateAR) mv.activateAR(); else openAR(t.dataset.ar); return; }
@@ -239,5 +268,7 @@
   window.addEventListener('hashchange', route);
   document.addEventListener('keydown', function (e) { if (e.key === 'Escape') { if (arEl.classList.contains('on')) closeAR(); else if (sheet.classList.contains('on')) history.back(); } });
 
-  Store.ready().then(function () { D = Store.get(); S = D.settings; applyTheme(); route(); });
+  var started = false;
+  function start() { if (started) return; started = true; D = Store.get(); S = D.settings; L = pickLang(); applyTheme(); route(); }
+  Store.ready().then(start, start); setTimeout(start, 3500);
 })();

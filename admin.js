@@ -24,6 +24,9 @@ window.Admin = (function () {
     });
   }
 
+  function tg(o, l, k) { return (o.i18n && o.i18n[l] && o.i18n[l][k]) || ''; }
+  function setTg(o, l, k, v) { o.i18n = o.i18n || {}; o.i18n[l] = o.i18n[l] || {}; o.i18n[l][k] = v; }
+  var LN = { en: 'İngilizce (English)', ar: 'Arapça (العربية)' };
   function mount(el) {
     host = el; D = Store.get();
     host.innerHTML = '<div class="adm-root"></div><div class="modal"></div><div class="toast"></div>';
@@ -107,12 +110,14 @@ window.Admin = (function () {
         };
       });
     }
+    function bindSpin() {
     $('#sp-video').onchange = function (e) { var f = e.target.files[0]; e.target.value = ''; if (!f) return; framesFromVideo(f, 36).then(setSpin).catch(function (er) { paintSpin(); toast(er.message); }); };
     $('#sp-photos').onchange = function (e) {
       var files = [].slice.call(e.target.files).sort(function (a, b) { return a.name < b.name ? -1 : 1; }); e.target.value = ''; if (files.length < 4) return toast('En az 4 fotoğraf seçin');
       var out = []; files.reduce(function (pr, f) { return pr.then(function () { return addPhoto(f, 900).then(function (path) { out.push(path); }); }); }, Promise.resolve()).then(function () { setSpin(out); }).catch(function (er) { toast(er.message); });
     };
     $('#sp-clear').onclick = function () { setSpin([]); };
+    }
     function convert() {
       if (!p.images.length) return toast('Önce fotoğraf ekleyin');
       if (busy) return; busy = true; paintPreview('3D oluşturuluyor… (5-15 sn)');
@@ -134,6 +139,8 @@ window.Admin = (function () {
       '<div class="grid2"><label class="f">Ürün adı<input id="f-name" value="' + esc(p.name) + '"></label><label class="f">Kategori<select id="f-cat">' + D.categories.map(function (c) { return '<option value="' + esc(c.id) + '"' + (c.id === p.categoryId ? ' selected' : '') + '>' + esc(c.name) + '</option>'; }).join('') + '</select></label>' +
       '<label class="f">Fiyat<input id="f-price" type="number" step="0.01" min="0" value="' + esc(p.price) + '"></label><label class="f">İndirimli fiyat (boş = yok)<input id="f-sale" type="number" step="0.01" min="0" value="' + esc(p.salePrice || '') + '"></label></div>' +
       '<label class="f">Açıklama<textarea id="f-desc">' + esc(p.desc) + '</textarea></label><label class="f">İçindekiler (virgülle ayırın)<input id="f-ing" value="' + esc(p.ingredients.join(', ')) + '"></label>' +
+      ['en', 'ar'].map(function (l) { return '<div class="box3d" style="display:block!important;background:#faf7f2;border:1px solid #eee7dc;border-radius:14px;padding:12px;margin:10px 0"><b>' + LN[l] + ' çeviri</b><div class="grid2" style="margin-top:8px"><label class="f">Ürün adı<input id="t-' + l + '-name" ' + (l === 'ar' ? 'dir="rtl" ' : '') + 'value="' + esc(tg(p, l, 'name')) + '"></label><label class="f">Fiyat ($, boş = otomatik)<input id="t-' + l + '-usd" type="number" step="0.01" min="0" value="' + esc(l === 'en' ? (p.priceUSD || '') : '') + '"' + (l === 'ar' ? ' disabled placeholder="İngilizcedeki $ fiyat kullanılır"' : '') + '></label></div><label class="f">Açıklama<textarea id="t-' + l + '-desc" ' + (l === 'ar' ? 'dir="rtl" ' : '') + '>' + esc(tg(p, l, 'desc')) + '</textarea></label><label class="f">İçindekiler (virgülle ayırın' + (l === 'ar' ? ', Arapça virgül « ، » da olur' : '') + ')<input id="t-' + l + '-ing" ' + (l === 'ar' ? 'dir="rtl" ' : '') + 'value="' + esc((tg(p, l, 'ingredients') || []).join(l === 'ar' ? '، ' : ', ')) + '"></label></div>'; }).join('') +
+      '<label class="f" style="max-width:260px">İndirimli fiyat ($, boş = otomatik)<input id="t-sale-usd" type="number" step="0.01" min="0" value="' + esc(p.salePriceUSD || '') + '"></label>' +
       '<div class="checks"><label><input type="checkbox" id="f-new"' + (p.isNew ? ' checked' : '') + '> Yeni ürün</label><label><input type="checkbox" id="f-camp"' + (p.isCampaign ? ' checked' : '') + '> Kampanyalı ürün</label><label><input type="checkbox" id="f-av"' + (p.available !== false ? ' checked' : '') + '> Satışta</label><label><input type="checkbox" id="f-ar"' + (p.arEnabled ? ' checked' : '') + '> "Masanda Gör" butonu</label></div>' +
       '<b style="font-size:13px;color:#7a7167">Fotoğraflar (ilki kapak olur)</b><div class="imgs" id="imgs" style="margin-top:8px"></div>' +
       '<div class="row" style="margin-bottom:14px;flex-wrap:wrap"><label class="btn sm">+ Fotoğraf yükle<input id="f-file" type="file" accept="image/*" multiple hidden></label><input id="f-url" placeholder="veya görsel yolu: img/benim.jpg" style="flex:1;min-width:160px;padding:7px 10px;border:1px solid #e5dfd6;border-radius:10px"><button class="btn sm" id="f-addurl" type="button">Ekle</button></div>' +
@@ -146,7 +153,7 @@ window.Admin = (function () {
       '<small style="display:block;color:#7a7167;margin-bottom:10px">Ürünün etrafında yavaşça dönerek 10-15 sn video çekin (tabağı sabit tutup telefonla çevresini dolaşın) veya 12-36 fotoğraf yükleyin. Menüde parmakla gerçekten 360° döner; gördüğünüz ürünün aynısıdır.</small>' +
       '<div class="row" style="flex-wrap:wrap"><label class="btn sm">Video yükle<input id="sp-video" type="file" accept="video/*" hidden></label><label class="btn sm">Fotoğraf serisi yükle<input id="sp-photos" type="file" accept="image/*" multiple hidden></label><button class="btn sm del" id="sp-clear" type="button">360\'ı kaldır</button></div></div>' +
       '<div class="row" style="justify-content:flex-end"><button class="btn" id="f-cancel">İptal</button><button class="btn pri" id="f-save">Kaydet</button></div>');
-    paintImgs(); paintPreview(); paintSpin();
+    paintImgs(); paintPreview(); paintSpin(); bindSpin();
     $('#imgs').onclick = function (e) { var b = e.target.closest('button'); if (!b) return; if (b.dataset.rm) p.images.splice(+b.dataset.rm, 1); if (b.dataset.mk) { var s = p.images.splice(+b.dataset.mk, 1)[0]; p.images.unshift(s); } paintImgs(); };
     $('#f-file').onchange = function (e) {
       var files = [].slice.call(e.target.files); e.target.value = '';
@@ -164,6 +171,8 @@ window.Admin = (function () {
       if (busy) return toast('3D oluşturma bitsin');
       var name = $('#f-name').value.trim(); if (!name) return toast('Ürün adı gerekli');
       p.name = name; p.categoryId = $('#f-cat').value; p.price = parseFloat($('#f-price').value) || 0; var sv = parseFloat($('#f-sale').value); p.salePrice = sv > 0 ? sv : null;
+      ['en', 'ar'].forEach(function (l) { setTg(p, l, 'name', $('#t-' + l + '-name').value.trim()); setTg(p, l, 'desc', $('#t-' + l + '-desc').value.trim()); setTg(p, l, 'ingredients', $('#t-' + l + '-ing').value.split(/[,،]/).map(function (x) { return x.trim(); }).filter(Boolean)); });
+      var uv = parseFloat($('#t-en-usd').value); p.priceUSD = uv > 0 ? uv : null; var us = parseFloat($('#t-sale-usd').value); p.salePriceUSD = us > 0 ? us : null;
       p.desc = $('#f-desc').value.trim(); p.ingredients = $('#f-ing').value.split(',').map(function (x) { return x.trim(); }).filter(Boolean);
       p.isNew = $('#f-new').checked; p.isCampaign = $('#f-camp').checked; p.available = $('#f-av').checked; p.arEnabled = false;
       var i = D.products.map(function (x) { return x.id; }).indexOf(p.id); if (i < 0) D.products.push(p); else D.products[i] = p;
@@ -188,26 +197,28 @@ window.Admin = (function () {
   }
   function catForm(id) {
     var c = id ? JSON.parse(JSON.stringify(D.categories.filter(function (x) { return x.id === id; })[0])) : { id: 'k' + uid(), name: '', image: '' };
-    openModal('<h2>' + (id ? 'Kategoriyi Düzenle' : 'Yeni Kategori') + '</h2><label class="f">Kategori adı<input id="c-name" value="' + esc(c.name) + '"></label><b style="font-size:13px;color:#7a7167">Kapak fotoğrafı</b>' +
+    openModal('<h2>' + (id ? 'Kategoriyi Düzenle' : 'Yeni Kategori') + '</h2><label class="f">Kategori adı (Türkçe)<input id="c-name" value="' + esc(c.name) + '"></label><div class="grid2"><label class="f">İngilizce ad<input id="c-en" value="' + esc(tg(c, 'en', 'name')) + '"></label><label class="f">Arapça ad<input id="c-ar" dir="rtl" value="' + esc(tg(c, 'ar', 'name')) + '"></label></div><b style="font-size:13px;color:#7a7167">Kapak fotoğrafı</b>' +
       '<div class="imgs" style="margin-top:8px"><div class="im main" style="width:150px;height:150px"><img id="c-prev" src="' + esc(U(c.image)) + '" alt=""></div></div>' +
       '<div class="row" style="margin-bottom:16px;flex-wrap:wrap"><label class="btn sm">Fotoğraf yükle<input id="c-file" type="file" accept="image/*" hidden></label><input id="c-url" placeholder="veya yol: img/kapak.jpg" style="flex:1;min-width:160px;padding:7px 10px;border:1px solid #e5dfd6;border-radius:10px"></div>' +
       '<div class="row" style="justify-content:flex-end"><button class="btn" id="c-cancel">İptal</button><button class="btn pri" id="c-save">Kaydet</button></div>');
     $('#c-file').onchange = function (e) { if (e.target.files[0]) addPhoto(e.target.files[0], 900).then(function (path) { c.image = path; $('#c-prev').src = U(path); }); };
     $('#c-url').oninput = function (e) { if (e.target.value.trim()) { c.image = e.target.value.trim(); $('#c-prev').src = c.image; } };
     $('#c-cancel').onclick = closeModal;
-    $('#c-save').onclick = function () { var n = $('#c-name').value.trim(); if (!n) return toast('Kategori adı gerekli'); c.name = n; var i = D.categories.map(function (x) { return x.id; }).indexOf(c.id); if (i < 0) D.categories.push(c); else D.categories[i] = c; if (save()) { closeModal(); render(); } };
+    $('#c-save').onclick = function () { var n = $('#c-name').value.trim(); if (!n) return toast('Kategori adı gerekli'); c.name = n; setTg(c, 'en', 'name', $('#c-en').value.trim()); setTg(c, 'ar', 'name', $('#c-ar').value.trim()); var i = D.categories.map(function (x) { return x.id; }).indexOf(c.id); if (i < 0) D.categories.push(c); else D.categories[i] = c; if (save()) { closeModal(); render(); } };
   }
 
   /* ---------- ayarlar ---------- */
   function tabSettings(body) {
     var s = D.settings, fld = function (k, label, type) { return '<label class="f">' + label + '<input data-k="' + k + '" type="' + (type || 'text') + '" value="' + esc(s[k]) + '"></label>'; };
-    body.innerHTML = '<div class="card"><h3>İşletme bilgileri</h3><div class="grid2">' + fld('businessName', 'İşletme adı') + fld('tagline', 'Slogan / alt yazı') + fld('logoText', 'Logo harfleri (örn. LD)') + fld('currency', 'Para birimi') + '</div></div>' +
-      '<div class="card"><h3>Menü yazıları</h3><div class="grid2">' + fld('categoriesTitle', 'Ana başlık (örn. Menü)') + fld('featuredTitle', 'Öne çıkanlar başlığı') + fld('searchPlaceholder', 'Arama kutusu yazısı') + fld('arButtonText', '"Masanda gör" buton yazısı') + '</div>' + fld('marquee', 'Kayan yazı (boş bırakırsanız gizlenir)') +
+    body.innerHTML = '<div class="card"><h3>İşletme bilgileri</h3><div class="grid2">' + fld('businessName', 'İşletme adı') + fld('tagline', 'Slogan / alt yazı') + fld('logoText', 'Logo harfleri (örn. LD)') + fld('currency', 'Para birimi (Türkçe sürüm)') + '</div></div>' +
+      '<div class="card"><h3>Diller & Dolar</h3><div class="checks">' + [['tr', 'Türkçe'], ['en', 'English'], ['ar', 'العربية']].map(function (x) { return '<label><input type="checkbox" data-lg="' + x[0] + '"' + ((s.langs || ['tr', 'en', 'ar']).indexOf(x[0]) > -1 ? ' checked' : '') + '> ' + x[1] + '</label>'; }).join('') + '</div><div class="grid2">' + fld('usdRate', '1 Dolar kaç TL? (İngilizce/Arapça fiyatlar buna göre hesaplanır)', 'number') + '<label class="f">Varsayılan dil<select data-k="defaultLang">' + [['tr', 'Türkçe'], ['en', 'English'], ['ar', 'العربية']].map(function (x) { return '<option value="' + x[0] + '"' + ((s.defaultLang || 'tr') === x[0] ? ' selected' : '') + '>' + x[1] + '</option>'; }).join('') + '</select></label></div><small style="color:#7a7167">Dolar fiyatını tek tek yazmak isterseniz ürün düzenleme ekranındaki $ alanını kullanın.</small></div>' +
+      ['en', 'ar'].map(function (l) { var f2 = function (k, label) { return '<label class="f">' + label + '<input data-t="' + l + '.' + k + '" ' + (l === 'ar' ? 'dir="rtl" ' : '') + 'value="' + esc(tg(s, l, k)) + '"></label>'; }; return '<div class="card"><h3>' + LN[l] + ' site yazıları</h3><div class="grid2">' + f2('tagline', 'Slogan') + f2('categoriesTitle', 'Ana başlık') + f2('featuredTitle', 'Öne çıkanlar başlığı') + f2('searchPlaceholder', 'Arama kutusu') + f2('address', 'Adres') + f2('wifi', 'Wi-Fi bilgisi') + '</div>' + f2('marquee', 'Kayan yazı') + f2('footerText', 'Alt bilgi yazısı') + '</div>'; }).join('') +
+      '<div class="card"><h3>Menü yazıları</h3><div class="grid2">' + fld('categoriesTitle', 'Ana başlık (örn. Menü)') + fld('featuredTitle', 'Öne çıkanlar başlığı') + fld('searchPlaceholder', 'Arama kutusu yazısı') + '</div>' + fld('marquee', 'Kayan yazı (boş bırakırsanız gizlenir)') +
       '<div class="checks"><label><input type="checkbox" data-k="showFeatured"' + (s.showFeatured !== false ? ' checked' : '') + '> "Öne çıkanlar" bölümünü göster</label></div></div>' +
       '<div class="card"><h3>Görünüm</h3><label class="f" style="max-width:200px">Vurgu rengi<input data-k="accent" type="color" value="' + esc(s.accent) + '"></label></div>' +
       '<div class="card"><h3>İletişim & alt bilgi</h3><div class="grid2">' + fld('phone', 'Telefon') + fld('instagram', 'Instagram') + fld('address', 'Adres') + fld('wifi', 'Wi-Fi bilgisi') + '</div>' + fld('footerText', 'Alt bilgi yazısı') + '</div>' +
       '<div class="card"><h3>Panel şifresi</h3>' + fld('adminPassword', 'Şifre') + '<small style="color:#7a7167">Statik sitede çalıştığı için bu şifre kazara girişi engeller; gerçek güvenlik katmanı değildir.</small></div><button class="btn pri" id="ss">Kaydet</button>';
-    $('#ss').onclick = function () { [].forEach.call(body.querySelectorAll('[data-k]'), function (i) { s[i.dataset.k] = i.type === 'checkbox' ? i.checked : i.value; }); if (save()) render(); };
+    $('#ss').onclick = function () { [].forEach.call(body.querySelectorAll('[data-k]'), function (i) { s[i.dataset.k] = i.type === 'checkbox' ? i.checked : (i.type === 'number' ? (parseFloat(i.value) || 0) : i.value); }); s.langs = [].map.call(body.querySelectorAll('[data-lg]:checked'), function (x) { return x.dataset.lg; }); if (!s.langs.length) s.langs = ['tr']; [].forEach.call(body.querySelectorAll('[data-t]'), function (i) { var q = i.dataset.t.split('.'); setTg(s, q[0], q[1], i.value); }); if (save()) render(); };
   }
 
   /* ---------- yayınla ---------- */
