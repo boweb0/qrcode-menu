@@ -9,8 +9,288 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700;12..96,800&family=DM+Sans:wght@400;500;700&family=Cairo:wght@500;700;800&display=swap" rel="stylesheet" media="print" onload="this.media='all'">
   <style>html,body{background:#0d0c0b;color:#f4ede3}</style>
-  <link rel="stylesheet" href="css/style.css">
-  <link rel="stylesheet" href="css/admin.css">
+  <style>
+:root{
+  --accent:#ff6a2b;
+  --bg:#0d0c0b; --ink:#f4ede3; --mute:#9b9186; --line:rgba(244,237,227,.1); --card:#171513;
+  --display:"Bricolage Grotesque","Helvetica Neue",Arial,sans-serif;
+  --body:"DM Sans",-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif;
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html{background:var(--bg)}
+body{margin:0;background:transparent;color:var(--ink);font-family:var(--body);-webkit-font-smoothing:antialiased;min-height:100vh;overflow-x:hidden}
+img{display:block;max-width:100%}
+button{font:inherit;color:inherit;cursor:pointer;border:0;background:none;padding:0}
+a{color:inherit}
+
+/* ---------- arka plan: yavaş akan ışık kürecikleri + film greni + imleç ışığı ---------- */
+.bg{position:fixed;inset:0;z-index:-1;background:var(--bg);overflow:hidden}
+.blob{position:absolute;border-radius:50%;filter:blur(90px);opacity:.55;will-change:transform}
+.b1{width:62vmax;height:62vmax;left:-22vmax;top:-26vmax;background:radial-gradient(circle,var(--accent),transparent 68%);animation:drift1 22s ease-in-out infinite alternate}
+.b2{width:48vmax;height:48vmax;right:-20vmax;top:30vh;background:radial-gradient(circle,#7a1f12,transparent 68%);animation:drift2 28s ease-in-out infinite alternate;opacity:.6}
+.b3{width:40vmax;height:40vmax;left:10vw;bottom:-24vmax;background:radial-gradient(circle,#3b2a12,transparent 68%);animation:drift3 24s ease-in-out infinite alternate}
+.spot{position:absolute;inset:0;background:radial-gradient(420px 420px at var(--mx,50%) var(--my,30%),color-mix(in srgb,var(--accent) 16%,transparent),transparent 70%);transition:background .2s}
+.grain{position:absolute;inset:-50%;opacity:.09;mix-blend-mode:overlay;background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='200' height='200'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>");animation:grain 1.2s steps(6) infinite}
+@keyframes drift1{to{transform:translate(14vmax,10vmax) scale(1.12)}}
+@keyframes drift2{to{transform:translate(-16vmax,-12vmax) scale(1.2)}}
+@keyframes drift3{to{transform:translate(18vmax,-8vmax) scale(.9)}}
+@keyframes grain{0%{transform:translate(0,0)}20%{transform:translate(-4%,3%)}40%{transform:translate(3%,-4%)}60%{transform:translate(-3%,-2%)}80%{transform:translate(4%,3%)}100%{transform:translate(0,0)}}
+
+#app{max-width:720px;margin:0 auto;padding:0 18px calc(46px + env(safe-area-inset-bottom));position:relative}
+body.admin-mode #app,body.admin-mode #sheet,body.admin-mode #ar,body.admin-mode .bg{display:none}
+
+/* ---------- üst ---------- */
+.top{display:flex;align-items:center;justify-content:space-between;padding:calc(18px + env(safe-area-inset-top)) 2px 0}
+.brand{display:flex;align-items:center;gap:12px;min-width:0}
+.mark{width:46px;height:46px;border-radius:50%;border:1.5px solid var(--accent);display:grid;place-items:center;font-family:var(--display);font-weight:800;font-size:16px;color:var(--accent);letter-spacing:.5px;flex:none;position:relative}
+.mark::after{content:"";position:absolute;inset:-6px;border-radius:50%;border:1px dashed color-mix(in srgb,var(--accent) 50%,transparent);animation:spin 18s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.brand b{display:block;font-family:var(--display);font-weight:800;font-size:19px;letter-spacing:.2px;line-height:1}
+.brand small{display:block;margin-top:5px;color:var(--mute);font-size:11.5px;letter-spacing:1.6px;text-transform:uppercase}
+.open{font-size:11px;letter-spacing:1.4px;text-transform:uppercase;padding:7px 12px;border:1px solid var(--line);border-radius:99px;color:var(--mute);display:flex;align-items:center;gap:7px;flex:none}
+.open i{width:6px;height:6px;border-radius:50%;background:#35d07f;box-shadow:0 0 0 0 #35d07f88;animation:ping 2s infinite}
+@keyframes ping{70%{box-shadow:0 0 0 8px #35d07f00}100%{box-shadow:0 0 0 0 #35d07f00}}
+
+.headline{margin:34px 2px 0;font-family:var(--display);font-weight:800;font-size:clamp(46px,14vw,84px);line-height:.92;letter-spacing:-.03em}
+.headline span{display:block;overflow:hidden}
+.headline span>em{display:block;font-style:normal;transform:translateY(105%);animation:rise .9s cubic-bezier(.2,.9,.2,1) forwards}
+.headline span:nth-child(2)>em{animation-delay:.12s;color:transparent;-webkit-text-stroke:1.5px var(--ink)}
+@keyframes rise{to{transform:none}}
+.marquee{margin:26px -18px 0;overflow:hidden;border-block:1px solid var(--line);padding:11px 0;mask-image:linear-gradient(90deg,transparent,#000 12%,#000 88%,transparent);-webkit-mask-image:linear-gradient(90deg,transparent,#000 12%,#000 88%,transparent)}
+.track{display:flex;width:max-content;animation:slide 26s linear infinite}
+.track span{font-family:var(--display);font-weight:700;font-size:15px;letter-spacing:.28em;white-space:pre;color:var(--mute)}
+.track span b{color:var(--accent);font-weight:700}
+@keyframes slide{to{transform:translateX(-50%)}}
+
+.search{position:relative;margin:22px 0 4px}
+.search input{width:100%;padding:16px 18px 16px 50px;border-radius:18px;border:1px solid var(--line);background:rgba(244,237,227,.04);color:var(--ink);font:500 15px var(--body);outline:none;transition:.3s;backdrop-filter:blur(8px)}
+.search input::placeholder{color:var(--mute)}
+.search input:focus{border-color:var(--accent);background:rgba(244,237,227,.07);box-shadow:0 0 0 4px color-mix(in srgb,var(--accent) 16%,transparent)}
+.search svg{position:absolute;left:18px;top:50%;transform:translateY(-50%);width:19px;height:19px;color:var(--mute)}
+
+.sec{display:flex;align-items:flex-end;justify-content:space-between;margin:34px 2px 14px}
+.sec h2{margin:0;font-family:var(--display);font-weight:800;font-size:26px;letter-spacing:-.02em}
+.sec span{font-size:11.5px;letter-spacing:1.6px;text-transform:uppercase;color:var(--mute)}
+
+/* ---------- reveal ---------- */
+.rv{opacity:0;transform:translateY(26px) scale(.98);transition:opacity .8s cubic-bezier(.2,.8,.2,1),transform .8s cubic-bezier(.2,.8,.2,1);transition-delay:var(--d,0ms)}
+.rv.in{opacity:1;transform:none}
+
+/* ---------- kategori kartları: 2 sütun kare ---------- */
+.cat-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;perspective:1100px}
+.cat{position:relative;aspect-ratio:1/1;border-radius:28px;overflow:hidden;text-align:left;background:var(--card);border:1px solid var(--line);transform-style:preserve-3d}
+.cat.rv.in{transition:transform .25s ease-out,opacity .8s,box-shadow .4s}
+.cat img{position:absolute;inset:-2%;width:104%;height:104%;object-fit:cover;transition:transform 1.2s cubic-bezier(.2,.8,.2,1);filter:saturate(1.08) contrast(1.04)}
+.cat::before{content:"";position:absolute;inset:0;z-index:1;background:linear-gradient(180deg,rgba(0,0,0,.35) 0,transparent 32%,rgba(8,6,5,.9) 100%)}
+.cat:hover img,.cat:active img{transform:scale(1.12)}
+.cat .no{position:absolute;left:16px;top:14px;z-index:2;font:700 12px var(--display);letter-spacing:.2em;color:rgba(255,255,255,.85)}
+.cat .go{position:absolute;right:12px;top:12px;z-index:2;width:34px;height:34px;border-radius:50%;display:grid;place-items:center;border:1px solid rgba(255,255,255,.35);backdrop-filter:blur(8px);transition:.35s}
+.cat:hover .go,.cat:active .go{background:var(--accent);border-color:var(--accent);transform:rotate(45deg)}
+.cat .lbl{position:absolute;left:16px;right:14px;bottom:15px;z-index:2}
+.cat .lbl b{display:block;font:800 20px/1.05 var(--display);letter-spacing:-.01em}
+.cat .lbl small{display:block;margin-top:6px;color:rgba(255,255,255,.65);font-size:11px;letter-spacing:1.4px;text-transform:uppercase}
+
+/* ---------- öne çıkanlar ---------- */
+.rail{display:flex;gap:12px;overflow-x:auto;margin:0 -18px;padding:2px 18px 14px;scroll-snap-type:x mandatory;scrollbar-width:none}
+.rail::-webkit-scrollbar{display:none}
+.fcard{flex:none;width:172px;scroll-snap-align:start;text-align:left;position:relative;aspect-ratio:4/5;border-radius:24px;overflow:hidden;border:1px solid var(--line);background:var(--card)}
+.fcard img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;transition:transform .9s cubic-bezier(.2,.8,.2,1)}
+.fcard:active img{transform:scale(1.08)}
+.fcard::after{content:"";position:absolute;inset:0;background:linear-gradient(180deg,transparent 42%,rgba(8,6,5,.92))}
+.fcard .in{position:absolute;left:12px;right:12px;bottom:12px;z-index:2}
+.fcard b{display:block;font:700 15px/1.15 var(--display)}
+.fcard .badges{position:absolute;left:10px;top:10px;z-index:2}
+
+/* ---------- rozet & fiyat ---------- */
+.badges{display:flex;gap:5px;flex-wrap:wrap}
+.badge{font:700 9.5px var(--body);letter-spacing:.14em;text-transform:uppercase;padding:4px 8px;border-radius:6px;background:rgba(13,12,11,.7);backdrop-filter:blur(6px);border:1px solid var(--line)}
+.badge.new{background:#e8ff59;color:#14180a;border-color:transparent}
+.badge.camp{background:var(--accent);color:#1a0b04;border-color:transparent}
+.badge.off{background:#f4ede3;color:#14110d;border-color:transparent}
+.pr{display:flex;align-items:baseline;gap:8px;flex-wrap:wrap;margin-top:5px}
+.pr b{font:800 1.05em var(--display);color:var(--ink);letter-spacing:-.01em}
+.pr b.sale{color:var(--accent)}
+.pr s{color:var(--mute);font-size:.82em}
+
+/* ---------- kategori sayfası ---------- */
+.bar{position:sticky;top:0;z-index:20;margin:0 -18px;padding:calc(12px + env(safe-area-inset-top)) 18px 10px;background:linear-gradient(rgba(13,12,11,.92) 70%,transparent);backdrop-filter:blur(10px)}
+.bar-row{display:flex;align-items:center;gap:14px}
+.back{width:44px;height:44px;border-radius:50%;border:1px solid var(--line);display:grid;place-items:center;flex:none;transition:.25s}
+.back:hover{border-color:var(--accent);color:var(--accent)}
+.bar h2{margin:0;font:800 28px/1 var(--display);letter-spacing:-.025em}
+.chips{display:flex;gap:8px;overflow-x:auto;margin-top:14px;scrollbar-width:none}
+.chips::-webkit-scrollbar{display:none}
+.chip{flex:none;padding:9px 15px;border-radius:99px;border:1px solid var(--line);font-size:13px;color:var(--mute);transition:.3s}
+.chip.on{background:var(--ink);color:#14110d;border-color:var(--ink);font-weight:700}
+.list{display:flex;flex-direction:column;gap:14px;margin-top:12px}
+.row{display:grid;grid-template-columns:128px 1fr;gap:16px;text-align:left;width:100%;padding:10px;border-radius:26px;border:1px solid var(--line);background:linear-gradient(135deg,rgba(244,237,227,.05),rgba(244,237,227,.015));backdrop-filter:blur(6px);transition:border-color .3s,transform .3s}
+.row:hover{border-color:color-mix(in srgb,var(--accent) 60%,transparent)}
+.row:active{transform:scale(.985)}
+.row .ph{position:relative;aspect-ratio:1;border-radius:19px;overflow:hidden;background:var(--card)}
+.row .ph img{width:100%;height:100%;object-fit:cover;transition:transform .9s cubic-bezier(.2,.8,.2,1)}
+.row:hover .ph img{transform:scale(1.1)}
+.row .ph .t3{position:absolute;right:7px;bottom:7px;font:800 9px var(--display);letter-spacing:.14em;padding:4px 7px;border-radius:6px;background:rgba(13,12,11,.75);backdrop-filter:blur(6px);border:1px solid rgba(255,255,255,.2)}
+.row .info{display:flex;flex-direction:column;min-width:0;padding:4px 4px 2px 0}
+.row h3{margin:2px 0 6px;font:800 19px/1.1 var(--display);letter-spacing:-.015em}
+.row p{margin:0;color:var(--mute);font-size:12.5px;line-height:1.45;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.row .badges{margin-top:8px}
+.row .foot{margin-top:auto;padding-top:8px;font-size:17px}
+.row.out{opacity:.4;filter:grayscale(1)}
+.empty{text-align:center;color:var(--mute);padding:60px 10px}
+
+footer{margin-top:40px;text-align:center;color:var(--mute);font-size:12.5px;line-height:1.9}
+footer .lk{display:flex;gap:8px;justify-content:center;flex-wrap:wrap;margin-bottom:10px}
+footer .lk span{padding:7px 13px;border-radius:99px;border:1px solid var(--line)}
+footer .own{display:inline-block;margin-top:14px;font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:#6d655c;text-decoration:none}
+footer .own:hover{color:var(--accent)}
+
+/* ---------- ürün sayfası ---------- */
+.sheet-wrap{position:fixed;inset:0;z-index:50;pointer-events:none}
+.sheet-wrap.on{pointer-events:auto}
+.sheet-bg{position:absolute;inset:0;background:rgba(5,4,3,.7);backdrop-filter:blur(6px);opacity:0;transition:opacity .4s}
+.sheet-wrap.on .sheet-bg{opacity:1}
+.sheet{position:absolute;left:50%;bottom:0;width:100%;max-width:720px;max-height:96vh;overflow-y:auto;transform:translate(-50%,105%);transition:transform .6s cubic-bezier(.2,.9,.2,1);background:#12100e;border-radius:32px 32px 0 0;border:1px solid var(--line);border-bottom:0;padding-bottom:calc(26px + env(safe-area-inset-bottom));scrollbar-width:none}
+.sheet::-webkit-scrollbar{display:none}
+.sheet-wrap.on .sheet{transform:translate(-50%,0)}
+.close{position:absolute;right:14px;top:14px;z-index:6;width:42px;height:42px;border-radius:50%;background:rgba(13,12,11,.6);backdrop-filter:blur(10px);border:1px solid var(--line);display:grid;place-items:center}
+.stage{position:relative;height:min(92vw,470px);overflow:hidden;background:radial-gradient(60% 55% at 50% 46%,#4a3e33 0,#1b1612 62%,#12100e 100%);border-radius:32px 32px 0 0}
+.stage::before{content:"";position:absolute;left:10%;right:10%;bottom:12%;height:1px;background:linear-gradient(90deg,transparent,rgba(255,255,255,.25),transparent)}
+.stage::after{content:"";position:absolute;inset:0;pointer-events:none;background:linear-gradient(180deg,transparent 70%,#12100e)}
+.stage model-viewer{width:100%;height:100%;--poster-color:transparent;background:transparent;outline:none}
+.stage .photo{position:absolute;inset:0}
+.stage .photo img{width:100%;height:100%;object-fit:cover;animation:kb 14s ease-in-out infinite alternate}
+@keyframes kb{from{transform:scale(1.02)}to{transform:scale(1.12) translate(-1.5%,-1%)}}
+.stage .hint{position:absolute;left:50%;bottom:16px;transform:translateX(-50%);z-index:4;font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:rgba(255,255,255,.75);display:flex;align-items:center;gap:8px;white-space:nowrap;pointer-events:none}
+.seg{position:absolute;left:14px;top:14px;z-index:6;display:flex;padding:4px;border-radius:99px;background:rgba(13,12,11,.6);backdrop-filter:blur(10px);border:1px solid var(--line)}
+.seg button{padding:8px 15px;border-radius:99px;font:700 11px var(--body);letter-spacing:.14em;text-transform:uppercase;color:var(--mute);transition:.25s}
+.seg button.on{background:var(--ink);color:#14110d}
+.thumbs{display:flex;gap:8px;padding:12px 18px 0;overflow-x:auto}
+.thumb{flex:none;width:58px;height:58px;border-radius:14px;overflow:hidden;border:2px solid transparent;opacity:.55;transition:.25s}
+.thumb img{width:100%;height:100%;object-fit:cover}
+.thumb.on{border-color:var(--accent);opacity:1}
+.pbody{padding:18px 22px 0}
+.pbody h2{margin:12px 0 4px;font:800 clamp(30px,8vw,40px)/1 var(--display);letter-spacing:-.03em}
+.pbody .pr{font-size:26px;margin:8px 0 14px}
+.pbody p{color:#cfc5b8;line-height:1.65;font-size:15px;margin:0 0 6px}
+.pbody h4{margin:22px 0 10px;font:700 11px var(--body);letter-spacing:.2em;text-transform:uppercase;color:var(--mute)}
+.ing{display:flex;gap:7px;flex-wrap:wrap}
+.ing span{padding:8px 13px;border-radius:99px;border:1px solid var(--line);font-size:13px;background:rgba(244,237,227,.03)}
+.ar-btn{margin-top:26px;width:100%;padding:18px;border-radius:20px;font:800 16px var(--display);letter-spacing:.01em;color:#1a0b04;display:flex;align-items:center;justify-content:center;gap:12px;background:var(--accent);position:relative;overflow:hidden;transition:transform .2s}
+.ar-btn:active{transform:scale(.98)}
+.ar-btn::before{content:"";position:absolute;inset:0;background:linear-gradient(105deg,transparent 35%,rgba(255,255,255,.45) 50%,transparent 65%);transform:translateX(-130%);animation:shine 3.4s infinite}
+@keyframes shine{0%{transform:translateX(-130%)}55%,100%{transform:translateX(130%)}}
+.ar-note{text-align:center;color:var(--mute);font-size:11.5px;margin-top:10px}
+
+/* ---------- Masanda gör (kamera yedeği) ---------- */
+.ar{position:fixed;inset:0;z-index:100;background:#000;display:none;overflow:hidden;touch-action:none}
+.ar.on{display:block}
+.ar video{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+.ar .nocam{position:absolute;inset:0;background:repeating-linear-gradient(95deg,rgba(0,0,0,.1) 0 3px,transparent 3px 11px),linear-gradient(180deg,#6a4a2e,#2a1a0e)}
+.ar .item{position:absolute;left:0;top:0;width:62vw;max-width:360px;touch-action:none;will-change:transform}
+.ar .item img{width:100%;height:auto;pointer-events:none;filter:drop-shadow(0 22px 16px rgba(0,0,0,.5))}
+.ar .item::before{content:"";position:absolute;left:6%;right:6%;bottom:-3%;height:12%;background:radial-gradient(ellipse,rgba(0,0,0,.55),transparent 70%);filter:blur(6px);z-index:-1}
+.ar .top2{position:absolute;left:0;right:0;top:0;padding:calc(14px + env(safe-area-inset-top)) 14px 30px;display:flex;justify-content:space-between;align-items:center;background:linear-gradient(rgba(0,0,0,.6),transparent);z-index:3}
+.ar .top2 b{font:800 17px var(--display)}
+.ar .top2 button{width:42px;height:42px;border-radius:50%;background:rgba(0,0,0,.5);backdrop-filter:blur(6px);font-size:18px}
+.ar .panel{position:absolute;left:12px;right:12px;bottom:calc(14px + env(safe-area-inset-bottom));z-index:3;padding:12px 16px;border-radius:22px;background:rgba(18,16,14,.72);backdrop-filter:blur(16px);border:1px solid var(--line)}
+.ar .panel label{display:flex;align-items:center;gap:10px;font-size:12px;color:var(--mute);margin:6px 0}
+.ar .panel label span{width:66px}
+.ar .panel input[type=range]{flex:1;accent-color:var(--accent)}
+.ar .tip{position:absolute;left:50%;top:94px;transform:translateX(-50%);z-index:3;padding:9px 15px;border-radius:99px;background:rgba(0,0,0,.6);font-size:12.5px;text-align:center;transition:opacity .6s;max-width:90vw}
+
+@media (min-width:640px){.cat .lbl b{font-size:23px}.row{grid-template-columns:150px 1fr}}
+@media (prefers-reduced-motion:reduce){*{animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important}}
+
+.stage .spin{position:absolute;inset:0;cursor:grab;touch-action:none;user-select:none}.stage .spin:active{cursor:grabbing}.stage .spin img{width:100%;height:100%;object-fit:cover;pointer-events:none}
+
+/* ---- dil seçici ---- */
+.tr-end{display:flex;align-items:center;gap:8px}
+.lang{display:flex;padding:3px;border:1px solid var(--line);border-radius:99px;background:rgba(255,255,255,.04)}
+.lang button{padding:6px 9px;border-radius:99px;font:700 11px var(--body);letter-spacing:.06em;color:var(--mute);min-width:30px;transition:.2s}
+.lang button.on{background:var(--accent);color:#1a0b04}
+@media (max-width:380px){.open{display:none}}
+
+/* ---- Arapça / sağdan sola ---- */
+[dir=rtl] body,[dir=rtl] button,[dir=rtl] input,[dir=rtl] .brand b,[dir=rtl] .headline,[dir=rtl] h1,[dir=rtl] h2,[dir=rtl] h3,[dir=rtl] h4,[dir=rtl] .cat .lbl b,[dir=rtl] .pr b,[dir=rtl] .mark{font-family:'Cairo','Segoe UI',Tahoma,'Noto Sans Arabic',Arial,sans-serif}
+[dir=rtl] *{letter-spacing:0!important;text-transform:none!important}
+[dir=rtl] .headline{line-height:1.15}
+[dir=rtl] .cat,[dir=rtl] .fcard,[dir=rtl] .row{text-align:right}
+[dir=rtl] .cat .no{left:auto;right:16px}
+[dir=rtl] .cat .go{right:auto;left:12px;transform:scaleX(-1)}
+[dir=rtl] .cat .lbl{left:14px;right:16px}
+[dir=rtl] .back svg{transform:scaleX(-1)}
+[dir=rtl] .track{direction:ltr}
+[dir=rtl] .search svg{left:auto;right:18px}
+[dir=rtl] .search input{padding:16px 50px 16px 18px}
+[dir=rtl] .close{left:14px;right:auto}
+[dir=rtl] .lang,[dir=rtl] .lang button{font-family:'Segoe UI',Arial,sans-serif}
+
+/* Yönetim paneli (index.html#yonetim) — tüm kurallar .adm altında, siteyle çakışmaz */
+.adm{--a-bg:#f3f0eb;--a-panel:#fff;--a-ink:#1b1814;--a-mute:#7a7167;--a-line:#e5dfd6;--a-acc:#e2551c;--a-danger:#d64545;
+  position:relative;min-height:100vh;background:var(--a-bg);color:var(--a-ink);font:14.5px/1.45 "DM Sans",-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif}
+.adm *{box-sizing:border-box}
+.adm[hidden]{display:none}
+.adm button,.adm input,.adm select,.adm textarea{font:inherit}
+.adm .login{min-height:100vh;display:grid;place-items:center;padding:20px}
+.adm .login .box{background:var(--a-panel);padding:34px;border-radius:24px;width:100%;max-width:390px;box-shadow:0 24px 70px rgba(0,0,0,.09);text-align:center}
+.adm .login h1{margin:0 0 4px;font-size:24px;letter-spacing:-.02em}.adm .login p{color:var(--a-mute);margin:0 0 20px}
+.adm .topbar{position:sticky;top:0;z-index:10;background:rgba(255,255,255,.92);backdrop-filter:blur(10px);border-bottom:1px solid var(--a-line);display:flex;align-items:center;gap:10px;padding:12px 18px;flex-wrap:wrap}
+.adm .topbar h1{font-size:17px;margin:0;flex:1;min-width:140px;letter-spacing:-.01em}
+.adm .wrap{max-width:1000px;margin:0 auto;padding:18px}
+.adm .tabs{display:flex;gap:6px;overflow-x:auto;margin-bottom:16px}
+.adm .tab{padding:10px 16px;border-radius:12px;background:transparent;border:1px solid transparent;cursor:pointer;color:var(--a-mute);white-space:nowrap;font-weight:600}
+.adm .tab.on{background:var(--a-panel);border-color:var(--a-line);color:var(--a-ink);box-shadow:0 2px 8px rgba(0,0,0,.05)}
+.adm .card{background:var(--a-panel);border:1px solid var(--a-line);border-radius:16px;padding:16px;margin-bottom:14px}
+.adm .card h3{margin:0 0 12px;font-size:16px}
+.adm .btn{padding:9px 16px;border-radius:10px;border:1px solid var(--a-line);background:var(--a-panel);cursor:pointer;font-weight:600;color:var(--a-ink);text-decoration:none;display:inline-block}
+.adm .btn:hover{border-color:#b9ae9e}
+.adm .btn.pri{background:var(--a-ink);color:#fff;border-color:var(--a-ink)}
+.adm .btn.acc{background:var(--a-acc);color:#fff;border-color:var(--a-acc)}
+.adm .btn.del{color:var(--a-danger)}
+.adm .btn.sm{padding:6px 11px;font-size:13px}
+.adm .btn[disabled]{opacity:.5;cursor:default}
+.adm .row{display:flex;gap:12px;align-items:center}
+.adm .toolbar{display:flex;gap:10px;align-items:center;justify-content:space-between;margin-bottom:12px;flex-wrap:wrap}
+.adm .item{display:flex;gap:12px;align-items:center;padding:10px;border:1px solid var(--a-line);border-radius:14px;margin-bottom:8px;background:#fff}
+.adm .item img{width:60px;height:60px;border-radius:12px;object-fit:cover;background:#2a241d;flex:none}
+.adm .item .meta{flex:1;min-width:0}.adm .item .meta b{display:block}.adm .item .meta small{color:var(--a-mute)}
+.adm .item .acts{display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end}
+.adm .tag{display:inline-block;font-size:11px;padding:2px 8px;border-radius:99px;background:#eee7da;margin-right:4px}
+.adm .tag.n{background:#e8f7b8;color:#3a4a0a}.adm .tag.c{background:#ffe0d2;color:#9a3410}.adm .tag.x{background:#ddd;color:#555}.adm .tag.d{background:#1b1814;color:#fff}
+.adm label.f{display:block;margin-bottom:12px;font-size:13px;color:var(--a-mute)}
+.adm label.f>input,.adm label.f>select,.adm label.f>textarea{display:block;width:100%;margin-top:5px;padding:10px 12px;border-radius:10px;border:1px solid var(--a-line);background:#fff;color:var(--a-ink)}
+.adm label.f>input[type=color]{padding:2px;height:42px}
+.adm textarea{min-height:80px;resize:vertical}
+.adm .grid2{display:grid;grid-template-columns:1fr 1fr;gap:0 14px}
+.adm .grid3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:0 14px}
+.adm .checks{display:flex;gap:16px;flex-wrap:wrap;margin:6px 0 14px}
+.adm .checks label{display:flex;gap:6px;align-items:center;cursor:pointer}
+.adm .imgs{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:10px}
+.adm .imgs .im{position:relative;width:96px;height:96px;border-radius:12px;overflow:hidden;border:2px solid var(--a-line);background:#2a241d}
+.adm .imgs .im.main{border-color:var(--a-acc)}
+.adm .imgs img{width:100%;height:100%;object-fit:cover}
+.adm .imgs .x{position:absolute;right:4px;top:4px;width:22px;height:22px;border-radius:50%;background:rgba(0,0,0,.65);color:#fff;border:0;cursor:pointer;line-height:1}
+.adm .imgs .mk{position:absolute;left:4px;bottom:4px;font-size:10px;background:rgba(0,0,0,.65);color:#fff;border:0;border-radius:6px;padding:2px 6px;cursor:pointer}
+.adm .box3d{border:1px dashed #cfc5b6;border-radius:16px;padding:14px;margin:4px 0 16px;background:#fbf9f6}
+.adm .box3d .pv{height:240px;border-radius:12px;overflow:hidden;background:radial-gradient(circle at 50% 45%,#4a3e33,#17130f);margin-bottom:12px;position:relative;display:grid;place-items:center;color:#cdbfae;font-size:13px;text-align:center;padding:10px}
+.adm .box3d .pv model-viewer{width:100%;height:100%;--poster-color:transparent;background:transparent}
+.adm .busy{position:absolute;inset:0;display:grid;place-items:center;background:rgba(0,0,0,.55);color:#fff;font-weight:700}
+.adm #modal .bg,.adm .modal .bg{position:fixed;inset:0;background:rgba(20,16,10,.6);z-index:200;display:grid;place-items:start center;overflow-y:auto;padding:30px 12px}
+.adm .dlg{background:var(--a-panel);border-radius:22px;width:100%;max-width:680px;padding:22px;box-shadow:0 30px 80px rgba(0,0,0,.3)}
+.adm .dlg h2{margin:0 0 14px;font-size:19px}
+.adm .toast{position:fixed;left:50%;bottom:24px;transform:translate(-50%,40px);background:var(--a-ink);color:#fff;padding:10px 18px;border-radius:99px;opacity:0;transition:.3s;z-index:300;pointer-events:none;max-width:90vw;text-align:center}
+.adm .toast.on{opacity:1;transform:translate(-50%,0)}
+.adm .note{background:#fff3df;border:1px solid #f1d9a8;color:#6b4f12;padding:12px 14px;border-radius:12px;line-height:1.55;font-size:13.5px;margin-bottom:14px}
+.adm .steps{padding-left:20px;line-height:1.8}
+.adm .qr{display:flex;gap:18px;align-items:center;flex-wrap:wrap}
+.adm .qr img{width:200px;height:200px;border:1px solid var(--a-line);border-radius:12px;background:#fff;padding:8px}
+.adm .dirty{background:#ffe7c9;color:#8a4a00;padding:4px 10px;border-radius:99px;font-size:12px;font-weight:700}
+.adm code{background:#f0ebe3;padding:1px 6px;border-radius:6px;font-size:12.5px}
+@media(max-width:600px){.adm .grid2,.adm .grid3{grid-template-columns:1fr}.adm .item{flex-wrap:wrap}.adm .item .acts{width:100%;justify-content:flex-start}}
+
+.adm .box3d,.adm label:has(#f-ar){display:none!important}
+
+</style>
 </head>
 <body>
   <div class="bg" aria-hidden="true"><i class="blob b1"></i><i class="blob b2"></i><i class="blob b3"></i><i class="spot"></i><i class="grain"></i></div>
@@ -19,9 +299,1437 @@
   <div id="ar" class="ar"></div>
   <div id="admin" class="adm" hidden></div>
   <script>window.addEventListener("error",function(e){var d=document.getElementById("app");if(d&&!d.innerHTML){d.innerHTML='<pre style="padding:20px;white-space:pre-wrap;color:#f88;font:13px monospace">Hata / Error: '+(e.message||"")+" ("+(e.filename||"").split("/").pop()+":"+(e.lineno||"")+")</pre>"}});</script>
+  <script>
+/* Menü verisi. Yönetim panelinden "Yayın paketi" ile indirdiğiniz dosyalarla güncellenir. */
+window.MENU_DEFAULT = {
+ "version": 2,
+ "updatedAt": 1795202217055,
+ "settings": {
+  "businessName": "Lezzet Durağı",
+  "tagline": "Közde • Taze • Hızlı",
+  "logoText": "LD",
+  "categoriesTitle": "Menü",
+  "featuredTitle": "Öne Çıkanlar",
+  "searchPlaceholder": "Menüde ara…",
+  "marquee": "TAZE  •  ÇITIR  •  SICAK  •  KÖZDE  •  ",
+  "currency": "₺",
+  "accent": "#ff6a2b",
+  "showFeatured": true,
+  "phone": "+90 555 000 00 00",
+  "instagram": "@lezzetdurağı",
+  "address": "Örnek Mah. Demo Sk. No:1",
+  "wifi": "Wi-Fi şifresi: lezzet2026",
+  "footerText": "Afiyet olsun! Fiyatlarımıza KDV dahildir.",
+  "adminPassword": "admin123",
+  "usdRate": 43,
+  "defaultLang": "tr",
+  "langs": [
+   "tr",
+   "en",
+   "ar"
+  ],
+  "i18n": {
+   "en": {
+    "tagline": "Grilled • Fresh • Fast",
+    "categoriesTitle": "Menu",
+    "featuredTitle": "Featured",
+    "searchPlaceholder": "Search the menu…",
+    "marquee": "FRESH  •  CRISPY  •  HOT  •  GRILLED  •  ",
+    "address": "Örnek Mah. Demo Sk. No:1",
+    "wifi": "Wi-Fi password: lezzet2026",
+    "footerText": "Enjoy your meal! Prices include VAT."
+   },
+   "ar": {
+    "tagline": "مشويات • طازج • سريع",
+    "categoriesTitle": "القائمة",
+    "featuredTitle": "الأطباق المميزة",
+    "searchPlaceholder": "ابحث في القائمة…",
+    "marquee": "طازج  •  مقرمش  •  ساخن  •  مشوي  •  ",
+    "address": "Örnek Mah. Demo Sk. No:1",
+    "wifi": "كلمة سر الواي فاي: lezzet2026",
+    "footerText": "بالهناء والشفاء! الأسعار شاملة ضريبة القيمة المضافة."
+   }
+  }
+ },
+ "categories": [
+  {
+   "id": "burger",
+   "name": "Burgerler",
+   "image": "img/burger-double.jpg",
+   "i18n": {
+    "en": {
+     "name": "Burgers"
+    },
+    "ar": {
+     "name": "البرغر"
+    }
+   }
+  },
+  {
+   "id": "menu",
+   "name": "Menüler",
+   "image": "img/burger-menu.jpg",
+   "i18n": {
+    "en": {
+     "name": "Meal Deals"
+    },
+    "ar": {
+     "name": "الوجبات"
+    }
+   }
+  },
+  {
+   "id": "kebap",
+   "name": "Kebap & Kumpir",
+   "image": "img/adana.jpg",
+   "i18n": {
+    "en": {
+     "name": "Kebab & Baked Potato"
+    },
+    "ar": {
+     "name": "كباب وكومبير"
+    }
+   }
+  },
+  {
+   "id": "doner",
+   "name": "Döner",
+   "image": "img/doner-pide.jpg",
+   "i18n": {
+    "en": {
+     "name": "Döner"
+    },
+    "ar": {
+     "name": "الدونر"
+    }
+   }
+  },
+  {
+   "id": "durum",
+   "name": "Dürüm & Tantuni",
+   "image": "img/tantuni.jpg",
+   "i18n": {
+    "en": {
+     "name": "Wraps & Tantuni"
+    },
+    "ar": {
+     "name": "لفائف وتانتوني"
+    }
+   }
+  },
+  {
+   "id": "icecek",
+   "name": "Soğuk İçecekler",
+   "image": "img/icecek-mor.jpg",
+   "i18n": {
+    "en": {
+     "name": "Cold Drinks"
+    },
+    "ar": {
+     "name": "مشروبات باردة"
+    }
+   }
+  }
+ ],
+ "products": [
+  {
+   "id": "burger-klasik",
+   "categoryId": "burger",
+   "name": "Klasik Cheeseburger",
+   "desc": "Dana burger köftesi, eritilmiş cheddar, taze marul ve domates; susamlı brioche ekmeğinde.",
+   "ingredients": [
+    "Dana köfte",
+    "Cheddar",
+    "Marul",
+    "Domates",
+    "Susamlı ekmek",
+    "Burger sos"
+   ],
+   "price": 240,
+   "salePrice": 205,
+   "isNew": false,
+   "isCampaign": true,
+   "available": true,
+   "round": false,
+   "images": [
+    "img/burger-klasik.jpg"
+   ],
+   "i18n": {
+    "en": {
+     "name": "Classic Cheeseburger",
+     "desc": "Beef patty, melted cheddar, fresh lettuce and tomato on a sesame brioche bun.",
+     "ingredients": [
+      "Beef patty",
+      "Cheddar",
+      "Lettuce",
+      "Tomato",
+      "Sesame bun",
+      "Burger sauce"
+     ]
+    },
+    "ar": {
+     "name": "تشيز برغر كلاسيك",
+     "desc": "قرص لحم بقري، جبنة شيدر ذائبة، خس وطماطم طازجة في خبز بريوش بالسمسم.",
+     "ingredients": [
+      "لحم بقري",
+      "شيدر",
+      "خس",
+      "طماطم",
+      "خبز بالسمسم",
+      "صلصة البرغر"
+     ]
+    }
+   }
+  },
+  {
+   "id": "burger-double",
+   "categoryId": "burger",
+   "name": "Double Cheddar Burger",
+   "desc": "Çift dana köfte, kat kat cheddar, turşu ve karamelize soğan; ev yapımı sosla.",
+   "ingredients": [
+    "2 × Dana köfte",
+    "Cheddar",
+    "Turşu",
+    "Karamelize soğan",
+    "Domates",
+    "Brioche ekmek"
+   ],
+   "price": 340,
+   "salePrice": null,
+   "isNew": true,
+   "isCampaign": false,
+   "available": true,
+   "round": false,
+   "images": [
+    "img/burger-double.jpg"
+   ],
+   "i18n": {
+    "en": {
+     "name": "Double Cheddar Burger",
+     "desc": "Two beef patties, layers of cheddar, pickles and caramelized onion with house sauce.",
+     "ingredients": [
+      "2 × Beef patty",
+      "Cheddar",
+      "Pickles",
+      "Caramelized onion",
+      "Tomato",
+      "Brioche bun"
+     ]
+    },
+    "ar": {
+     "name": "برغر دبل شيدر",
+     "desc": "قرصان من اللحم البقري، طبقات من الشيدر، مخلل وبصل مكرمل مع الصلصة الخاصة.",
+     "ingredients": [
+      "2 × لحم بقري",
+      "شيدر",
+      "مخلل",
+      "بصل مكرمل",
+      "طماطم",
+      "خبز بريوش"
+     ]
+    }
+   }
+  },
+  {
+   "id": "burger-menu",
+   "categoryId": "menu",
+   "name": "Burger Menü",
+   "desc": "Double burger, çıtır patates ve soğuk kola bir arada.",
+   "ingredients": [
+    "Double burger",
+    "Patates kızartması",
+    "Kola",
+    "Marul",
+    "Turşu"
+   ],
+   "price": 390,
+   "salePrice": 349,
+   "isNew": false,
+   "isCampaign": true,
+   "available": true,
+   "round": false,
+   "images": [
+    "img/burger-menu.jpg"
+   ],
+   "i18n": {
+    "en": {
+     "name": "Burger Meal",
+     "desc": "Double burger, crispy fries and an ice-cold cola together.",
+     "ingredients": [
+      "Double burger",
+      "French fries",
+      "Cola",
+      "Lettuce",
+      "Pickles"
+     ]
+    },
+    "ar": {
+     "name": "وجبة برغر",
+     "desc": "برغر دبل مع بطاطس مقرمشة ومشروب كولا بارد.",
+     "ingredients": [
+      "برغر دبل",
+      "بطاطس مقلية",
+      "كولا",
+      "خس",
+      "مخلل"
+     ]
+    }
+   }
+  },
+  {
+   "id": "combo",
+   "categoryId": "menu",
+   "name": "Fast Food Tabağı",
+   "desc": "Burger, sosisli, patates kızartması ve soğuk içecek; paylaşmalık tabak.",
+   "ingredients": [
+    "Burger",
+    "Sosisli",
+    "Patates kızartması",
+    "Soğuk içecek",
+    "Ketçap"
+   ],
+   "price": 520,
+   "salePrice": null,
+   "isNew": true,
+   "isCampaign": false,
+   "available": true,
+   "round": false,
+   "images": [
+    "img/combo.jpg"
+   ],
+   "i18n": {
+    "en": {
+     "name": "Fast Food Platter",
+     "desc": "Burger, hot dog, fries and a cold drink; a platter made for sharing.",
+     "ingredients": [
+      "Burger",
+      "Hot dog",
+      "French fries",
+      "Cold drink",
+      "Ketchup"
+     ]
+    },
+    "ar": {
+     "name": "طبق الوجبات السريعة",
+     "desc": "برغر وهوت دوغ وبطاطس ومشروب بارد؛ طبق مناسب للمشاركة.",
+     "ingredients": [
+      "برغر",
+      "هوت دوغ",
+      "بطاطس مقلية",
+      "مشروب بارد",
+      "كاتشب"
+     ]
+    }
+   }
+  },
+  {
+   "id": "adana",
+   "categoryId": "kebap",
+   "name": "Adana Kebap",
+   "desc": "Közde pişmiş acılı Adana, lavaş, közlenmiş domates ve biber; sumaklı soğan salatasıyla.",
+   "ingredients": [
+    "Dana-kuzu kıyma",
+    "Pul biber",
+    "Lavaş",
+    "Közlenmiş domates",
+    "Sumaklı soğan"
+   ],
+   "price": 380,
+   "salePrice": null,
+   "isNew": false,
+   "isCampaign": false,
+   "available": true,
+   "round": false,
+   "images": [
+    "img/adana.jpg"
+   ],
+   "i18n": {
+    "en": {
+     "name": "Adana Kebab",
+     "desc": "Charcoal-grilled spicy Adana kebab with flatbread, roasted tomato and pepper, and sumac onion salad.",
+     "ingredients": [
+      "Beef-lamb mince",
+      "Chili flakes",
+      "Flatbread",
+      "Roasted tomato",
+      "Sumac onion"
+     ]
+    },
+    "ar": {
+     "name": "كباب أضنة",
+     "desc": "كباب أضنة حار مشوي على الفحم مع خبز اللافاش وطماطم وفلفل مشويين وسلطة بصل بالسماق.",
+     "ingredients": [
+      "لحم بقري وضأن مفروم",
+      "فلفل أحمر مجروش",
+      "خبز لافاش",
+      "طماطم مشوية",
+      "بصل بالسماق"
+     ]
+    }
+   }
+  },
+  {
+   "id": "kofte-ekmek",
+   "categoryId": "kebap",
+   "name": "Köfte Ekmek",
+   "desc": "Izgara köfte, közlenmiş biber, domates ve kırmızı soğan; ince lavaş ekmeğinde.",
+   "ingredients": [
+    "Izgara köfte",
+    "Lavaş",
+    "Domates",
+    "Kırmızı soğan",
+    "Biber"
+   ],
+   "price": 210,
+   "salePrice": null,
+   "isNew": false,
+   "isCampaign": false,
+   "available": true,
+   "round": false,
+   "images": [
+    "img/kofte-ekmek.jpg"
+   ],
+   "i18n": {
+    "en": {
+     "name": "Meatball Sandwich",
+     "desc": "Grilled meatballs, roasted pepper, tomato and red onion in thin flatbread.",
+     "ingredients": [
+      "Grilled meatballs",
+      "Flatbread",
+      "Tomato",
+      "Red onion",
+      "Pepper"
+     ]
+    },
+    "ar": {
+     "name": "ساندويش كفتة",
+     "desc": "كفتة مشوية مع فلفل مشوي وطماطم وبصل أحمر في خبز لافاش رقيق.",
+     "ingredients": [
+      "كفتة مشوية",
+      "خبز لافاش",
+      "طماطم",
+      "بصل أحمر",
+      "فلفل"
+     ]
+    }
+   }
+  },
+  {
+   "id": "kumpir",
+   "categoryId": "kebap",
+   "name": "Kumpir",
+   "desc": "Fırınlanmış büyük patates, tereyağı ve kaşar; mısır, turşu, havuç, zeytin ve rus salatası ile.",
+   "ingredients": [
+    "Fırın patates",
+    "Tereyağı",
+    "Kaşar",
+    "Mısır",
+    "Turşu",
+    "Zeytin",
+    "Rus salatası"
+   ],
+   "price": 200,
+   "salePrice": 175,
+   "isNew": false,
+   "isCampaign": true,
+   "available": true,
+   "round": false,
+   "images": [
+    "img/kumpir.jpg"
+   ],
+   "i18n": {
+    "en": {
+     "name": "Kumpir (Loaded Baked Potato)",
+     "desc": "Large baked potato with butter and kashar cheese, topped with corn, pickles, carrot, olives and Russian salad.",
+     "ingredients": [
+      "Baked potato",
+      "Butter",
+      "Kashar cheese",
+      "Corn",
+      "Pickles",
+      "Olives",
+      "Russian salad"
+     ]
+    },
+    "ar": {
+     "name": "كومبير (بطاطس مشوية محشية)",
+     "desc": "بطاطس كبيرة مشوية مع الزبدة وجبنة القشقوان، مع الذرة والمخلل والجزر والزيتون وسلطة روسية.",
+     "ingredients": [
+      "بطاطس مشوية",
+      "زبدة",
+      "جبنة قشقوان",
+      "ذرة",
+      "مخلل",
+      "زيتون",
+      "سلطة روسية"
+     ]
+    }
+   }
+  },
+  {
+   "id": "doner-ekmek",
+   "categoryId": "doner",
+   "name": "Döner Ekmek Arası",
+   "desc": "Dana-tavuk karışık döner, domates, kırmızı soğan ve marul; taze ekmekte.",
+   "ingredients": [
+    "Döner",
+    "Domates",
+    "Kırmızı soğan",
+    "Marul",
+    "Yoğurtlu sos"
+   ],
+   "price": 200,
+   "salePrice": null,
+   "isNew": false,
+   "isCampaign": false,
+   "available": true,
+   "round": false,
+   "images": [
+    "img/doner-ekmek.jpg"
+   ],
+   "i18n": {
+    "en": {
+     "name": "Döner Sandwich",
+     "desc": "Mixed beef and chicken döner with tomato, red onion and lettuce in fresh bread.",
+     "ingredients": [
+      "Döner",
+      "Tomato",
+      "Red onion",
+      "Lettuce",
+      "Yogurt sauce"
+     ]
+    },
+    "ar": {
+     "name": "ساندويش دونر",
+     "desc": "دونر مشكل لحم بقري ودجاج مع طماطم وبصل أحمر وخس في خبز طازج.",
+     "ingredients": [
+      "دونر",
+      "طماطم",
+      "بصل أحمر",
+      "خس",
+      "صلصة اللبن"
+     ]
+    }
+   }
+  },
+  {
+   "id": "doner-pide",
+   "categoryId": "doner",
+   "name": "Izgara Pide Döner",
+   "desc": "Izgara pide içinde döner, domates, salatalık ve soğan; yanında patates dilimleri.",
+   "ingredients": [
+    "Döner",
+    "Pide",
+    "Domates",
+    "Salatalık",
+    "Patates dilimleri"
+   ],
+   "price": 230,
+   "salePrice": null,
+   "isNew": true,
+   "isCampaign": false,
+   "available": true,
+   "round": false,
+   "images": [
+    "img/doner-pide.jpg"
+   ],
+   "i18n": {
+    "en": {
+     "name": "Grilled Pide Döner",
+     "desc": "Döner in grilled pide bread with tomato, cucumber and onion, served with potato wedges.",
+     "ingredients": [
+      "Döner",
+      "Pide bread",
+      "Tomato",
+      "Cucumber",
+      "Potato wedges"
+     ]
+    },
+    "ar": {
+     "name": "دونر في خبز البيدا المشوي",
+     "desc": "دونر في خبز البيدا المشوي مع طماطم وخيار وبصل، يقدم مع شرائح البطاطس.",
+     "ingredients": [
+      "دونر",
+      "خبز بيدا",
+      "طماطم",
+      "خيار",
+      "شرائح بطاطس"
+     ]
+    }
+   }
+  },
+  {
+   "id": "tantuni",
+   "categoryId": "durum",
+   "name": "Tantuni Dürüm",
+   "desc": "Sac üzerinde sotelenmiş dana, domates, biber ve maydanoz; lavaşta.",
+   "ingredients": [
+    "Dana et",
+    "Domates",
+    "Biber",
+    "Maydanoz",
+    "Lavaş"
+   ],
+   "price": 190,
+   "salePrice": null,
+   "isNew": false,
+   "isCampaign": false,
+   "available": true,
+   "round": false,
+   "images": [
+    "img/tantuni.jpg"
+   ],
+   "i18n": {
+    "en": {
+     "name": "Tantuni Wrap",
+     "desc": "Beef sautéed on a griddle with tomato, pepper and parsley, wrapped in flatbread.",
+     "ingredients": [
+      "Beef",
+      "Tomato",
+      "Pepper",
+      "Parsley",
+      "Flatbread"
+     ]
+    },
+    "ar": {
+     "name": "لفافة تانتوني",
+     "desc": "لحم بقري مقلي على الصاج مع الطماطم والفلفل والبقدونس في خبز لافاش.",
+     "ingredients": [
+      "لحم بقري",
+      "طماطم",
+      "فلفل",
+      "بقدونس",
+      "خبز لافاش"
+     ]
+    }
+   }
+  },
+  {
+   "id": "durum",
+   "categoryId": "durum",
+   "name": "Et Dürüm",
+   "desc": "İnce lavaş, dilimlenmiş et, mevsim sebzeleri ve özel sos.",
+   "ingredients": [
+    "Dilimlenmiş et",
+    "Lavaş",
+    "Marul",
+    "Domates",
+    "Soğan",
+    "Sos"
+   ],
+   "price": 210,
+   "salePrice": null,
+   "isNew": true,
+   "isCampaign": false,
+   "available": true,
+   "round": false,
+   "images": [
+    "img/durum.jpg"
+   ],
+   "i18n": {
+    "en": {
+     "name": "Beef Wrap",
+     "desc": "Thin flatbread, sliced beef, seasonal vegetables and special sauce.",
+     "ingredients": [
+      "Sliced beef",
+      "Flatbread",
+      "Lettuce",
+      "Tomato",
+      "Onion",
+      "Sauce"
+     ]
+    },
+    "ar": {
+     "name": "لفافة اللحم",
+     "desc": "خبز لافاش رقيق مع شرائح اللحم وخضار الموسم والصلصة الخاصة.",
+     "ingredients": [
+      "شرائح لحم",
+      "خبز لافاش",
+      "خس",
+      "طماطم",
+      "بصل",
+      "صلصة"
+     ]
+    }
+   }
+  },
+  {
+   "id": "icecek-mor",
+   "categoryId": "icecek",
+   "name": "Yaban Mersinli Soğuk İçecek",
+   "desc": "Yaban mersini, nane ve bol buz ile ferah soğuk içecek.",
+   "ingredients": [
+    "Yaban mersini",
+    "Nane",
+    "Buz",
+    "Soda"
+   ],
+   "price": 110,
+   "salePrice": null,
+   "isNew": false,
+   "isCampaign": false,
+   "available": true,
+   "round": false,
+   "images": [
+    "img/icecek-mor.jpg"
+   ],
+   "i18n": {
+    "en": {
+     "name": "Blueberry Iced Drink",
+     "desc": "A refreshing cold drink with blueberries, mint and plenty of ice.",
+     "ingredients": [
+      "Blueberry",
+      "Mint",
+      "Ice",
+      "Soda"
+     ]
+    },
+    "ar": {
+     "name": "مشروب التوت الأزرق المثلج",
+     "desc": "مشروب بارد منعش بالتوت الأزرق والنعناع والكثير من الثلج.",
+     "ingredients": [
+      "توت أزرق",
+      "نعناع",
+      "ثلج",
+      "صودا"
+     ]
+    }
+   }
+  },
+  {
+   "id": "kizilay",
+   "categoryId": "icecek",
+   "name": "Kızılay Plus Enerji",
+   "desc": "Karışık meyve aromalı, şekersiz gazlı içecek (şişe).",
+   "ingredients": [
+    "Karışık meyve aroması",
+    "Mineralli su"
+   ],
+   "price": 70,
+   "salePrice": null,
+   "isNew": false,
+   "isCampaign": false,
+   "available": true,
+   "round": false,
+   "images": [
+    "img/kizilay.jpg"
+   ],
+   "i18n": {
+    "en": {
+     "name": "Kızılay Plus Energy",
+     "desc": "Mixed-fruit flavored, sugar-free sparkling drink (bottle).",
+     "ingredients": [
+      "Mixed fruit flavor",
+      "Mineral water"
+     ]
+    },
+    "ar": {
+     "name": "كيزيلاي بلس إنرجي",
+     "desc": "مشروب غازي بنكهة الفواكه المشكلة وبدون سكر (زجاجة).",
+     "ingredients": [
+      "نكهة فواكه مشكلة",
+      "مياه معدنية"
+     ]
+    }
+   }
+  },
+  {
+   "id": "icecek-kirmizi",
+   "categoryId": "icecek",
+   "name": "Vişneli Nane Buzlu",
+   "desc": "Vişne, nane ve bol buzla hazırlanan soğuk içecek.",
+   "ingredients": [
+    "Vişne",
+    "Nane",
+    "Buz"
+   ],
+   "price": 95,
+   "salePrice": 80,
+   "isNew": false,
+   "isCampaign": true,
+   "available": true,
+   "round": false,
+   "images": [
+    "img/icecek-kirmizi.jpg"
+   ],
+   "i18n": {
+    "en": {
+     "name": "Sour Cherry Mint Iced Drink",
+     "desc": "A cold drink made with sour cherry, mint and plenty of ice.",
+     "ingredients": [
+      "Sour cherry",
+      "Mint",
+      "Ice"
+     ]
+    },
+    "ar": {
+     "name": "مشروب الكرز الحامض والنعناع المثلج",
+     "desc": "مشروب بارد محضر من الكرز الحامض والنعناع والكثير من الثلج.",
+     "ingredients": [
+      "كرز حامض",
+      "نعناع",
+      "ثلج"
+     ]
+    }
+   }
+  }
+ ]
+};
+
+</script>
   <script src="data/menu.js"></script>
-  <script src="js/store.js"></script>
-  <script src="js/admin.js"></script>
-  <script src="js/app.js"></script>
+  <script>
+/* Veri katmanı
+   - data/menu.js  : GitHub'da yayınlanmış menü
+   - localStorage  : panelde yapılan taslak değişiklikler
+   - IndexedDB     : panelden yüklenen fotoğraflar ve 3D modeller (dosya olarak)
+   - Yayın paketi  : taslağı .zip olarak indirip repoya kopyalamak için */
+window.Store = (function () {
+  var KEY = 'qrmenu_draft_v2', DBN = 'qrmenu_assets', ST = 'a';
+  var DEFAULTS = {
+    businessName: 'Menü', tagline: '', logoText: 'M', categoriesTitle: 'Menü', featuredTitle: 'Öne Çıkanlar', searchPlaceholder: 'Menüde ara…',
+    marquee: 'TAZE  •  LEZZETLİ  •  SICAK  •  ', currency: '₺', accent: '#ff6a2b', showFeatured: true, arButtonText: 'Masanda Gör',
+    phone: '', instagram: '', address: '', wifi: '', footerText: '', adminPassword: 'admin123'
+  };
+  var urls = {}, blobs = {}, db = null, readyP = null;
+
+  function clone(o) { return JSON.parse(JSON.stringify(o)); }
+  function normalize(d) {
+    d = d || {};
+    d.settings = Object.assign({}, DEFAULTS, d.settings || {});
+    d.categories = d.categories || [];
+    d.products = (d.products || []).map(function (p) {
+      p.images = p.images || []; p.ingredients = p.ingredients || [];
+      if (p.available === undefined) p.available = true;
+      if (p.arEnabled === undefined) p.arEnabled = true;
+      return p;
+    });
+    d.updatedAt = d.updatedAt || 0;
+    return d;
+  }
+  function published() { return normalize(clone(window.MENU_DEFAULT || {})); }
+  function get() {
+    var pub = published(), local = null;
+    try { local = JSON.parse(localStorage.getItem(KEY)); } catch (e) { }
+    if (local && (local.updatedAt || 0) >= (pub.updatedAt || 0)) return normalize(local);
+    if (local) { try { localStorage.removeItem(KEY); } catch (e) { } }
+    return pub;
+  }
+  function hasDraft() { try { return !!localStorage.getItem(KEY); } catch (e) { return false; } }
+  function save(d) {
+    d.updatedAt = Date.now();
+    try { localStorage.setItem(KEY, JSON.stringify(d)); return true; } catch (e) { alert('Kayıt başarısız: tarayıcı hafızası dolu.'); return false; }
+  }
+  function reset() { try { localStorage.removeItem(KEY); } catch (e) { } }
+
+  /* ---- dosya (asset) deposu ---- */
+  function openDB() {
+    return new Promise(function (res) {
+      try { var r = indexedDB.open(DBN, 1); r.onupgradeneeded = function () { r.result.createObjectStore(ST); }; r.onsuccess = function () { res(r.result); }; r.onerror = function () { res(null); }; r.onblocked = function () { res(null); }; } catch (e) { res(null); }
+      setTimeout(function () { res(null); }, 1500);
+    });
+  }
+  function ready() {
+    if (readyP) return readyP;
+    readyP = openDB().then(function (d) {
+      db = d; if (!db) return;
+      return new Promise(function (res) {
+        setTimeout(res, 2500);
+        try {
+          var req = db.transaction(ST, 'readonly').objectStore(ST).openCursor();
+          req.onsuccess = function () { var c = req.result; if (c) { blobs[c.key] = c.value; urls[c.key] = URL.createObjectURL(c.value); c.continue(); } else res(); };
+          req.onerror = function () { res(); };
+        } catch (e) { res(); }
+      });
+    });
+    readyP = readyP.catch(function () { db = null; });
+    return readyP;
+  }
+  function putAsset(path, blob) {
+    blobs[path] = blob; if (urls[path]) URL.revokeObjectURL(urls[path]); urls[path] = URL.createObjectURL(blob);
+    return new Promise(function (res) {
+      if (!db) return res();
+      try { var tx = db.transaction(ST, 'readwrite'); tx.objectStore(ST).put(blob, path); tx.oncomplete = res; tx.onerror = res; } catch (e) { res(); }
+    });
+  }
+  function delAsset(path) {
+    delete blobs[path]; delete urls[path];
+    if (db) try { db.transaction(ST, 'readwrite').objectStore(ST).delete(path); } catch (e) { }
+  }
+  function url(p) { return p && urls[p] ? urls[p] : p; }
+  function hasAsset(p) { return !!blobs[p]; }
+  function clearAssets() { Object.keys(blobs).forEach(delAsset); }
+
+  /* ---- ZIP (sıkıştırmasız) ---- */
+  var CRC = (function () { var t = new Uint32Array(256); for (var n = 0; n < 256; n++) { var c = n; for (var k = 0; k < 8; k++) c = c & 1 ? 0xEDB88320 ^ (c >>> 1) : c >>> 1; t[n] = c >>> 0; } return t; })();
+  function crc32(u8) { var c = 0xFFFFFFFF; for (var i = 0; i < u8.length; i++) c = CRC[(c ^ u8[i]) & 255] ^ (c >>> 8); return (c ^ 0xFFFFFFFF) >>> 0; }
+  function zip(files) {
+    var enc = new TextEncoder(), parts = [], central = [], off = 0, now = new Date();
+    var dt = ((now.getHours() << 11) | (now.getMinutes() << 5) | (now.getSeconds() >> 1)) & 0xFFFF, dd = (((now.getFullYear() - 1980) << 9) | ((now.getMonth() + 1) << 5) | now.getDate()) & 0xFFFF;
+    files.forEach(function (f) {
+      var name = enc.encode(f.name), crc = crc32(f.data), h = new DataView(new ArrayBuffer(30));
+      h.setUint32(0, 0x04034b50, true); h.setUint16(4, 20, true); h.setUint16(6, 0x0800, true); h.setUint16(8, 0, true); h.setUint16(10, dt, true); h.setUint16(12, dd, true);
+      h.setUint32(14, crc, true); h.setUint32(18, f.data.length, true); h.setUint32(22, f.data.length, true); h.setUint16(26, name.length, true); h.setUint16(28, 0, true);
+      parts.push(h.buffer, name, f.data);
+      var c = new DataView(new ArrayBuffer(46));
+      c.setUint32(0, 0x02014b50, true); c.setUint16(4, 20, true); c.setUint16(6, 20, true); c.setUint16(8, 0x0800, true); c.setUint16(10, 0, true); c.setUint16(12, dt, true); c.setUint16(14, dd, true);
+      c.setUint32(16, crc, true); c.setUint32(20, f.data.length, true); c.setUint32(24, f.data.length, true); c.setUint16(28, name.length, true); c.setUint32(42, off, true);
+      central.push(c.buffer, name);
+      off += 30 + name.length + f.data.length;
+    });
+    var cs = 0; central.forEach(function (b) { cs += b.byteLength !== undefined ? b.byteLength : b.length; });
+    var e = new DataView(new ArrayBuffer(22));
+    e.setUint32(0, 0x06054b50, true); e.setUint16(8, files.length, true); e.setUint16(10, files.length, true); e.setUint32(12, cs, true); e.setUint32(16, off, true);
+    return new Blob(parts.concat(central, [e.buffer]), { type: 'application/zip' });
+  }
+
+  function exportJS(d) { return '/* Menü verisi - yönetim panelinden dışa aktarıldı */\nwindow.MENU_DEFAULT = ' + JSON.stringify(d, null, 1) + ';\n'; }
+
+  /* taslaktaki yüklenmiş dosyalar + menu.js → yayın paketi */
+  function buildPackage(d) {
+    d.updatedAt = Date.now(); save(d);
+    var paths = {};
+    function add(p) { if (p && blobs[p]) paths[p] = 1; }
+    d.categories.forEach(function (c) { add(c.image); });
+    d.products.forEach(function (p) { (p.images || []).forEach(add); (p.spin || []).forEach(add); add(p.cutout); add(p.model); add(p.modelIos); });
+    var list = Object.keys(paths), files = [{ name: 'data/menu.js', data: new TextEncoder().encode(exportJS(d)) }];
+    return Promise.all(list.map(function (p) { return blobs[p].arrayBuffer().then(function (b) { files.push({ name: p, data: new Uint8Array(b) }); }); })).then(function () { return { blob: zip(files), count: files.length }; });
+  }
+
+  function parseImport(text) {
+    var i = text.indexOf('{'), j = text.lastIndexOf('}');
+    if (i < 0 || j < 0) throw new Error('Geçersiz dosya');
+    var d = JSON.parse(text.slice(i, j + 1));
+    if (!d.categories || !d.products) throw new Error('Menü verisi bulunamadı');
+    return normalize(d);
+  }
+
+  return { get: get, save: save, reset: reset, hasDraft: hasDraft, ready: ready, putAsset: putAsset, delAsset: delAsset, url: url, hasAsset: hasAsset, clearAssets: clearAssets, buildPackage: buildPackage, exportJS: exportJS, parseImport: parseImport, defaults: DEFAULTS };
+})();
+
+</script>
+  <script>
+/* Yönetim paneli — index.html#yonetim içinde çalışır (siteyle aynı veriyi kullanır) */
+window.Admin = (function () {
+  'use strict';
+  var D, tab = 'products', filterCat = '', host, root, modal, toastEl;
+  var esc = function (s) { return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); };
+  var uid = function () { return Math.random().toString(36).slice(2, 8); };
+  var U = function (p) { return Store.url(p); };
+  var $ = function (s, r) { return (r || host).querySelector(s); };
+  var catName = function (id) { var c = D.categories.filter(function (x) { return x.id === id; })[0]; return c ? c.name : '—'; };
+
+  function toast(t) { toastEl.textContent = t; toastEl.classList.add('on'); clearTimeout(toast.t); toast.t = setTimeout(function () { toastEl.classList.remove('on'); }, 2400); }
+  function save(msg) { if (Store.save(D)) { toast(msg || 'Kaydedildi ✓'); return true; } return false; }
+
+  /* fotoğrafı küçült → dosya olarak sakla */
+  function addPhoto(file, max) {
+    return new Promise(function (res, rej) {
+      var url = URL.createObjectURL(file), im = new Image();
+      im.onload = function () {
+        var k = Math.min(1, (max || 1200) / Math.max(im.width, im.height)), c = document.createElement('canvas'); c.width = Math.round(im.width * k); c.height = Math.round(im.height * k);
+        c.getContext('2d').drawImage(im, 0, 0, c.width, c.height); URL.revokeObjectURL(url);
+        c.toBlob(function (b) { var path = 'img/u-' + uid() + Date.now().toString(36).slice(-3) + '.jpg'; Store.putAsset(path, b).then(function () { res(path); }); }, 'image/jpeg', 0.9);
+      };
+      im.onerror = function () { rej(new Error('Görsel okunamadı')); }; im.src = url;
+    });
+  }
+
+  function tg(o, l, k) { return (o.i18n && o.i18n[l] && o.i18n[l][k]) || ''; }
+  function setTg(o, l, k, v) { o.i18n = o.i18n || {}; o.i18n[l] = o.i18n[l] || {}; o.i18n[l][k] = v; }
+  var LN = { en: 'İngilizce (English)', ar: 'Arapça (العربية)' };
+  function mount(el) {
+    host = el; D = Store.get();
+    host.innerHTML = '<div class="adm-root"></div><div class="modal"></div><div class="toast"></div>';
+    root = $('.adm-root'); modal = $('.modal'); toastEl = $('.toast'); render();
+  }
+  function refresh() { D = Store.get(); render(); }
+
+  function renderLogin() {
+    root.innerHTML = '<div class="login"><div class="box"><h1>Yönetim Paneli</h1><p>' + esc(D.settings.businessName) + '</p><label class="f"><input id="pw" type="password" placeholder="Şifre" autofocus></label><button class="btn pri" id="go" style="width:100%">Giriş</button>' +
+      '<p style="margin-top:14px;font-size:12px">İlk şifre: <b>admin123</b> (Ayarlar sekmesinden değiştirin)</p><p style="font-size:12px"><a href="#">← Menüye dön</a></p></div></div>';
+    var go = function () { if ($('#pw').value === D.settings.adminPassword) { try { sessionStorage.setItem('qm_auth', '1'); } catch (e) { } window.__qmAuth = true; render(); } else toast('Şifre yanlış'); };
+    $('#go').onclick = go; $('#pw').onkeydown = function (e) { if (e.key === 'Enter') go(); };
+  }
+  function authed() { try { return sessionStorage.getItem('qm_auth') === '1'; } catch (e) { return !!window.__qmAuth; } }
+
+  function render() {
+    if (!authed()) return renderLogin();
+    var tabs = [['products', 'Ürünler'], ['categories', 'Kategoriler'], ['settings', 'Site Ayarları'], ['publish', 'Yayınla & QR']];
+    root.innerHTML = '<div class="topbar"><h1>' + esc(D.settings.businessName) + ' · Yönetim</h1>' + (Store.hasDraft() ? '<span class="dirty" title="Değişiklikler bu tarayıcıda. Yayınla sekmesinden GitHub\'a gönderin.">Taslak · yayınlanmadı</span>' : '') +
+      '<a class="btn acc" href="#">Menüyü Gör ↗</a><button class="btn" id="logout">Çıkış</button></div><div class="wrap"><div class="tabs">' +
+      tabs.map(function (t) { return '<button class="tab' + (t[0] === tab ? ' on' : '') + '" data-tab="' + t[0] + '">' + t[1] + '</button>'; }).join('') + '</div><div id="tabbody"></div></div>';
+    $('#logout').onclick = function () { try { sessionStorage.removeItem('qm_auth'); } catch (e) { } window.__qmAuth = false; render(); };
+    [].forEach.call(host.querySelectorAll('[data-tab]'), function (b) { b.onclick = function () { tab = b.dataset.tab; render(); }; });
+    ({ products: tabProducts, categories: tabCategories, settings: tabSettings, publish: tabPublish })[tab]($('#tabbody'));
+  }
+
+  function openModal(html) { modal.innerHTML = '<div class="bg"><div class="dlg">' + html + '</div></div>'; modal.firstChild.addEventListener('mousedown', function (e) { if (e.target === modal.firstChild) closeModal(); }); }
+  function closeModal() { modal.innerHTML = ''; }
+
+  /* ---------- ürünler ---------- */
+  function tabProducts(body) {
+    var list = D.products.filter(function (p) { return !filterCat || p.categoryId === filterCat; });
+    body.innerHTML = '<div class="toolbar"><select id="fc" class="btn"><option value="">Tüm kategoriler</option>' + D.categories.map(function (c) { return '<option value="' + esc(c.id) + '"' + (c.id === filterCat ? ' selected' : '') + '>' + esc(c.name) + '</option>'; }).join('') +
+      '</select><button class="btn acc" id="addp">+ Yeni Ürün</button></div>' +
+      (list.length ? list.map(function (p) {
+        return '<div class="item"><img src="' + esc(U(p.images[0] || '')) + '" alt=""><div class="meta"><b>' + esc(p.name) + '</b><small>' + esc(catName(p.categoryId)) + ' · ' + (p.salePrice ? '<s>' + p.price + '</s> ' + p.salePrice : p.price) + ' ' + esc(D.settings.currency) + '</small><div style="margin-top:4px">' +
+          (p.model ? '<span class="tag d">3D</span>' : '') + (p.isNew ? '<span class="tag n">Yeni</span>' : '') + (p.isCampaign ? '<span class="tag c">Kampanya</span>' : '') + (p.available === false ? '<span class="tag x">Gizli</span>' : '') + '</div></div>' +
+          '<div class="acts"><button class="btn sm" data-edit="' + esc(p.id) + '">Düzenle</button><button class="btn sm" data-tog="' + esc(p.id) + '">' + (p.available === false ? 'Göster' : 'Gizle') + '</button><button class="btn sm del" data-del="' + esc(p.id) + '">Sil</button></div></div>';
+      }).join('') : '<div class="card">Bu kategoride ürün yok.</div>');
+    $('#fc').onchange = function (e) { filterCat = e.target.value; render(); };
+    $('#addp').onclick = function () { if (!D.categories.length) return toast('Önce kategori ekleyin'); productForm(null); };
+    body.onclick = function (e) {
+      var b = e.target.closest('button'); if (!b) return;
+      if (b.dataset.edit) productForm(b.dataset.edit);
+      if (b.dataset.tog) { var p = D.products.filter(function (x) { return x.id === b.dataset.tog; })[0]; p.available = p.available === false; save(); render(); }
+      if (b.dataset.del && confirm('Bu ürün silinsin mi?')) { D.products = D.products.filter(function (x) { return x.id !== b.dataset.del; }); save('Silindi'); render(); }
+    };
+  }
+
+  function productForm(id) {
+    var p = id ? JSON.parse(JSON.stringify(D.products.filter(function (x) { return x.id === id; })[0])) : { id: 'x' + uid(), categoryId: filterCat || D.categories[0].id, name: '', desc: '', ingredients: [], price: '', salePrice: null, isNew: false, isCampaign: false, available: true, arEnabled: true, round: false, images: [] };
+    var busy = false;
+    function paintImgs() {
+      $('#imgs').innerHTML = p.images.map(function (s, i) {
+        return '<div class="im' + (i ? '' : ' main') + '"><img src="' + esc(U(s)) + '" alt=""><button class="x" data-rm="' + i + '" type="button">×</button>' + (i ? '<button class="mk" data-mk="' + i + '" type="button">Kapak yap</button>' : '<button class="mk" type="button" disabled>Kapak</button>') + '</div>';
+      }).join('') || '<small style="color:#999">Henüz fotoğraf yok — yükleyin, 3D otomatik oluşturulur</small>';
+      var sel = $('#o-src'); if (sel) sel.innerHTML = p.images.map(function (s, i) { return '<option value="' + i + '">Fotoğraf ' + (i + 1) + '</option>'; }).join('');
+    }
+    function paintPreview(msg) {
+      var pv = $('#pv');
+      if (busy) { pv.innerHTML = '<div class="busy">' + esc(msg || '3D oluşturuluyor…') + '</div>'; return; }
+      if (p.model && window.customElements && customElements.get('model-viewer')) pv.innerHTML = '<model-viewer src="' + esc(U(p.model)) + '" camera-controls auto-rotate shadow-intensity="1" camera-orbit="25deg 78deg auto" alt="3D önizleme"></model-viewer>';
+      else if (p.model) pv.textContent = '3D model hazır (önizleme için internet gerekir).';
+      else pv.textContent = 'Henüz 3D model yok. Fotoğraf yükleyip "Fotoğraftan 3D oluştur" butonuna basın.';
+      $('#o-clear').disabled = !p.model;
+    }
+    function paintSpin() { var n = (p.spin || []).length; $('#sp-info').textContent = n ? n + ' kare · aktif' : 'yok'; $('#sp-clear').disabled = !n; }
+    function setSpin(paths) { (p.spin || []).forEach(function (x) { if (Store.hasAsset(x)) Store.delAsset(x); }); p.spin = paths; paintSpin(); toast(paths.length + ' kareli 360° görünüm hazır ✓'); }
+    function framesFromVideo(file, n) {
+      return new Promise(function (res, rej) {
+        var v = document.createElement('video'), url = URL.createObjectURL(file), out = [], key = uid(); v.muted = true; v.playsInline = true; v.preload = 'auto'; v.src = url;
+        v.onerror = function () { rej(new Error('Video okunamadı')); };
+        v.onloadedmetadata = function () {
+          var dur = v.duration, k = Math.min(1, 800 / Math.max(v.videoWidth, v.videoHeight)), c = document.createElement('canvas'); c.width = Math.round(v.videoWidth * k); c.height = Math.round(v.videoHeight * k); var cx = c.getContext('2d'), i = 0;
+          (function next() {
+            if (i >= n) { URL.revokeObjectURL(url); return res(out); }
+            $('#sp-info').textContent = 'Kareler çıkarılıyor ' + (i + 1) + '/' + n;
+            v.onseeked = function () { cx.drawImage(v, 0, 0, c.width, c.height); c.toBlob(function (b) { var path = 'img/u-' + key + '-f' + String(i).padStart(2, '0') + '.jpg'; Store.putAsset(path, b).then(function () { out.push(path); i++; next(); }); }, 'image/jpeg', 0.85); };
+            v.currentTime = Math.min(dur - 0.05, (i / n) * dur);
+          })();
+        };
+      });
+    }
+    function bindSpin() {
+    $('#sp-video').onchange = function (e) { var f = e.target.files[0]; e.target.value = ''; if (!f) return; framesFromVideo(f, 36).then(setSpin).catch(function (er) { paintSpin(); toast(er.message); }); };
+    $('#sp-photos').onchange = function (e) {
+      var files = [].slice.call(e.target.files).sort(function (a, b) { return a.name < b.name ? -1 : 1; }); e.target.value = ''; if (files.length < 4) return toast('En az 4 fotoğraf seçin');
+      var out = []; files.reduce(function (pr, f) { return pr.then(function () { return addPhoto(f, 900).then(function (path) { out.push(path); }); }); }, Promise.resolve()).then(function () { setSpin(out); }).catch(function (er) { toast(er.message); });
+    };
+    $('#sp-clear').onclick = function () { setSpin([]); };
+    }
+    function convert() {
+      if (!p.images.length) return toast('Önce fotoğraf ekleyin');
+      if (busy) return; busy = true; paintPreview('3D oluşturuluyor… (5-15 sn)');
+      var idx = +($('#o-src').value || 0), o = { mode: $('#o-mode').value, widthCm: parseFloat($('#o-w').value) || 20, removeBg: $('#o-bg').checked, shape: $('#o-shape').value };
+      setTimeout(function () {
+        var src = U(p.images[idx]);
+        var go = (o.removeBg && o.shape === 'auto') ? Photo3D.removeBackground(src).then(function (img) { return Photo3D.convert(img, Object.assign({}, o, { preCut: true })); }).catch(function () { return Photo3D.convert(src, o); }) : Photo3D.convert(src, o);
+        go.then(function (r) {
+          var key = uid() + Date.now().toString(36).slice(-3), mp = 'models/u-' + key + '.glb', cp = 'img/cut-u-' + key + '.png';
+          return Promise.all([Store.putAsset(mp, r.glb), Store.putAsset(cp, r.cutout)]).then(function () {
+            if (p.model && Store.hasAsset(p.model)) Store.delAsset(p.model); if (p.cutout && Store.hasAsset(p.cutout)) Store.delAsset(p.cutout);
+            p.model = mp; p.cutout = cp; p.modelType = 'card'; busy = false; paintPreview();
+            toast(r.how === 'bg' || r.how === 'ml' ? '3D hazır ✓ Arka plan otomatik kaldırıldı' : '3D hazır ✓ (arka plan ayrılamadı, kesim şekli kullanıldı)');
+          });
+        }).catch(function (e) { busy = false; paintPreview(); toast('3D oluşturulamadı: ' + e.message); });
+      }, 60);
+    }
+    openModal('<h2>' + (id ? 'Ürünü Düzenle' : 'Yeni Ürün') + '</h2>' +
+      '<div class="grid2"><label class="f">Ürün adı<input id="f-name" value="' + esc(p.name) + '"></label><label class="f">Kategori<select id="f-cat">' + D.categories.map(function (c) { return '<option value="' + esc(c.id) + '"' + (c.id === p.categoryId ? ' selected' : '') + '>' + esc(c.name) + '</option>'; }).join('') + '</select></label>' +
+      '<label class="f">Fiyat<input id="f-price" type="number" step="0.01" min="0" value="' + esc(p.price) + '"></label><label class="f">İndirimli fiyat (boş = yok)<input id="f-sale" type="number" step="0.01" min="0" value="' + esc(p.salePrice || '') + '"></label></div>' +
+      '<label class="f">Açıklama<textarea id="f-desc">' + esc(p.desc) + '</textarea></label><label class="f">İçindekiler (virgülle ayırın)<input id="f-ing" value="' + esc(p.ingredients.join(', ')) + '"></label>' +
+      ['en', 'ar'].map(function (l) { return '<div class="box3d" style="display:block!important;background:#faf7f2;border:1px solid #eee7dc;border-radius:14px;padding:12px;margin:10px 0"><b>' + LN[l] + ' çeviri</b><div class="grid2" style="margin-top:8px"><label class="f">Ürün adı<input id="t-' + l + '-name" ' + (l === 'ar' ? 'dir="rtl" ' : '') + 'value="' + esc(tg(p, l, 'name')) + '"></label><label class="f">Fiyat ($, boş = otomatik)<input id="t-' + l + '-usd" type="number" step="0.01" min="0" value="' + esc(l === 'en' ? (p.priceUSD || '') : '') + '"' + (l === 'ar' ? ' disabled placeholder="İngilizcedeki $ fiyat kullanılır"' : '') + '></label></div><label class="f">Açıklama<textarea id="t-' + l + '-desc" ' + (l === 'ar' ? 'dir="rtl" ' : '') + '>' + esc(tg(p, l, 'desc')) + '</textarea></label><label class="f">İçindekiler (virgülle ayırın' + (l === 'ar' ? ', Arapça virgül « ، » da olur' : '') + ')<input id="t-' + l + '-ing" ' + (l === 'ar' ? 'dir="rtl" ' : '') + 'value="' + esc((tg(p, l, 'ingredients') || []).join(l === 'ar' ? '، ' : ', ')) + '"></label></div>'; }).join('') +
+      '<label class="f" style="max-width:260px">İndirimli fiyat ($, boş = otomatik)<input id="t-sale-usd" type="number" step="0.01" min="0" value="' + esc(p.salePriceUSD || '') + '"></label>' +
+      '<div class="checks"><label><input type="checkbox" id="f-new"' + (p.isNew ? ' checked' : '') + '> Yeni ürün</label><label><input type="checkbox" id="f-camp"' + (p.isCampaign ? ' checked' : '') + '> Kampanyalı ürün</label><label><input type="checkbox" id="f-av"' + (p.available !== false ? ' checked' : '') + '> Satışta</label><label><input type="checkbox" id="f-ar"' + (p.arEnabled ? ' checked' : '') + '> "Masanda Gör" butonu</label></div>' +
+      '<b style="font-size:13px;color:#7a7167">Fotoğraflar (ilki kapak olur)</b><div class="imgs" id="imgs" style="margin-top:8px"></div>' +
+      '<div class="row" style="margin-bottom:14px;flex-wrap:wrap"><label class="btn sm">+ Fotoğraf yükle<input id="f-file" type="file" accept="image/*" multiple hidden></label><input id="f-url" placeholder="veya görsel yolu: img/benim.jpg" style="flex:1;min-width:160px;padding:7px 10px;border:1px solid #e5dfd6;border-radius:10px"><button class="btn sm" id="f-addurl" type="button">Ekle</button></div>' +
+      '<div class="box3d"><div class="row" style="justify-content:space-between;margin-bottom:10px"><b>3D Model · Masanda Gör</b><label style="font-size:12.5px;color:#7a7167;display:flex;gap:6px;align-items:center"><input type="checkbox" id="o-auto" checked> Fotoğraf yüklenince otomatik 3D yap</label></div>' +
+      '<div class="pv" id="pv"></div><div class="grid3"><label class="f">Kaynak fotoğraf<select id="o-src"></select></label><label class="f">Duruş<select id="o-mode"><option value="upright">Dik duran (yandan çekim)</option><option value="flat">Masada yatık (üstten çekim)</option></select></label><label class="f">Gerçek genişlik (cm)<input id="o-w" type="number" min="3" max="80" value="20"></label></div>' +
+      '<div class="grid2"><label class="f">Kesim şekli<select id="o-shape"><option value="auto">Arka planı otomatik kaldır</option><option value="rounded">Yuvarlak köşeli kare</option><option value="ellipse">Oval</option></select></label><label class="f" style="display:flex;gap:8px;align-items:flex-end"><span style="display:flex;gap:6px;align-items:center;padding-bottom:10px"><input type="checkbox" id="o-bg" checked style="width:auto;margin:0"> Arka planı kaldırmayı dene</span></label></div>' +
+      '<div class="row" style="flex-wrap:wrap"><button class="btn acc" id="o-go" type="button">Fotoğraftan 3D oluştur</button><label class="btn sm">.glb yükle (taranmış gerçek model)<input id="o-file" type="file" accept=".glb,model/gltf-binary" hidden></label><button class="btn sm del" id="o-clear" type="button">3D\'yi kaldır</button></div>' +
+      '<small style="display:block;color:#7a7167;margin-top:8px">Tek fotoğraftan üretilen model "yarım 3D"dir: önden/yandan bakışta gerçekçi, tam arka yüz yoktur. Tam 360° için telefonla taranmış gerçek bir .glb yükleyin.</small></div>' +
+      '<div class="box3d"><div class="row" style="justify-content:space-between;margin-bottom:8px"><b>360° Döner Görünüm (gerçek)</b><span id="sp-info" style="font-size:12.5px;color:#7a7167"></span></div>' +
+      '<small style="display:block;color:#7a7167;margin-bottom:10px">Ürünün etrafında yavaşça dönerek 10-15 sn video çekin (tabağı sabit tutup telefonla çevresini dolaşın) veya 12-36 fotoğraf yükleyin. Menüde parmakla gerçekten 360° döner; gördüğünüz ürünün aynısıdır.</small>' +
+      '<div class="row" style="flex-wrap:wrap"><label class="btn sm">Video yükle<input id="sp-video" type="file" accept="video/*" hidden></label><label class="btn sm">Fotoğraf serisi yükle<input id="sp-photos" type="file" accept="image/*" multiple hidden></label><button class="btn sm del" id="sp-clear" type="button">360\'ı kaldır</button></div></div>' +
+      '<div class="row" style="justify-content:flex-end"><button class="btn" id="f-cancel">İptal</button><button class="btn pri" id="f-save">Kaydet</button></div>');
+    paintImgs(); paintPreview(); paintSpin(); bindSpin();
+    $('#imgs').onclick = function (e) { var b = e.target.closest('button'); if (!b) return; if (b.dataset.rm) p.images.splice(+b.dataset.rm, 1); if (b.dataset.mk) { var s = p.images.splice(+b.dataset.mk, 1)[0]; p.images.unshift(s); } paintImgs(); };
+    $('#f-file').onchange = function (e) {
+      var files = [].slice.call(e.target.files); e.target.value = '';
+      files.reduce(function (pr, f) { return pr.then(function () { return addPhoto(f, 1200).then(function (path) { p.images.push(path); paintImgs(); }); }); }, Promise.resolve()).then(function () {  }).catch(function (er) { toast(er.message); });
+    };
+    $('#f-addurl').onclick = function () { var u = $('#f-url').value.trim(); if (u) { p.images.push(u); $('#f-url').value = ''; paintImgs(); } };
+    $('#o-go').onclick = convert;
+    $('#o-file').onchange = function (e) {
+      var f = e.target.files[0]; if (!f) return; var path = 'models/u-' + uid() + '.glb';
+      Store.putAsset(path, f).then(function () { p.model = path; p.modelType = 'scan'; p.cutout = p.cutout || ''; paintPreview(); toast('Model yüklendi ✓'); });
+    };
+    $('#o-clear').onclick = function () { p.model = ''; paintPreview(); };
+    $('#f-cancel').onclick = closeModal;
+    $('#f-save').onclick = function () {
+      if (busy) return toast('3D oluşturma bitsin');
+      var name = $('#f-name').value.trim(); if (!name) return toast('Ürün adı gerekli');
+      p.name = name; p.categoryId = $('#f-cat').value; p.price = parseFloat($('#f-price').value) || 0; var sv = parseFloat($('#f-sale').value); p.salePrice = sv > 0 ? sv : null;
+      ['en', 'ar'].forEach(function (l) { setTg(p, l, 'name', $('#t-' + l + '-name').value.trim()); setTg(p, l, 'desc', $('#t-' + l + '-desc').value.trim()); setTg(p, l, 'ingredients', $('#t-' + l + '-ing').value.split(/[,،]/).map(function (x) { return x.trim(); }).filter(Boolean)); });
+      var uv = parseFloat($('#t-en-usd').value); p.priceUSD = uv > 0 ? uv : null; var us = parseFloat($('#t-sale-usd').value); p.salePriceUSD = us > 0 ? us : null;
+      p.desc = $('#f-desc').value.trim(); p.ingredients = $('#f-ing').value.split(',').map(function (x) { return x.trim(); }).filter(Boolean);
+      p.isNew = $('#f-new').checked; p.isCampaign = $('#f-camp').checked; p.available = $('#f-av').checked; p.arEnabled = false;
+      var i = D.products.map(function (x) { return x.id; }).indexOf(p.id); if (i < 0) D.products.push(p); else D.products[i] = p;
+      if (save()) { closeModal(); render(); }
+    };
+  }
+
+  /* ---------- kategoriler ---------- */
+  function tabCategories(body) {
+    body.innerHTML = '<div class="toolbar"><span style="color:#7a7167">Sıralamayı ▲▼ ile değiştirin. Menüde 2 sütunlu kare kartlar olarak görünür.</span><button class="btn acc" id="addc">+ Yeni Kategori</button></div>' +
+      D.categories.map(function (c, i) {
+        var n = D.products.filter(function (p) { return p.categoryId === c.id; }).length;
+        return '<div class="item"><img src="' + esc(U(c.image)) + '" alt=""><div class="meta"><b>' + esc(c.name) + '</b><small>' + n + ' ürün</small></div><div class="acts"><button class="btn sm" data-up="' + i + '"' + (i ? '' : ' disabled') + '>▲</button><button class="btn sm" data-dn="' + i + '"' + (i < D.categories.length - 1 ? '' : ' disabled') + '>▼</button><button class="btn sm" data-edit="' + esc(c.id) + '">Düzenle</button><button class="btn sm del" data-del="' + esc(c.id) + '">Sil</button></div></div>';
+      }).join('');
+    $('#addc').onclick = function () { catForm(null); };
+    body.onclick = function (e) {
+      var b = e.target.closest('button'); if (!b || b.disabled) return;
+      var mv = function (i, d) { var t = D.categories[i]; D.categories[i] = D.categories[i + d]; D.categories[i + d] = t; save(); render(); };
+      if (b.dataset.up) mv(+b.dataset.up, -1); if (b.dataset.dn) mv(+b.dataset.dn, 1); if (b.dataset.edit) catForm(b.dataset.edit);
+      if (b.dataset.del) { var n = D.products.filter(function (p) { return p.categoryId === b.dataset.del; }).length; if (confirm('Kategori silinsin mi?' + (n ? ' İçindeki ' + n + ' ürün de silinecek!' : ''))) { D.categories = D.categories.filter(function (c) { return c.id !== b.dataset.del; }); D.products = D.products.filter(function (p) { return p.categoryId !== b.dataset.del; }); save('Silindi'); render(); } }
+    };
+  }
+  function catForm(id) {
+    var c = id ? JSON.parse(JSON.stringify(D.categories.filter(function (x) { return x.id === id; })[0])) : { id: 'k' + uid(), name: '', image: '' };
+    openModal('<h2>' + (id ? 'Kategoriyi Düzenle' : 'Yeni Kategori') + '</h2><label class="f">Kategori adı (Türkçe)<input id="c-name" value="' + esc(c.name) + '"></label><div class="grid2"><label class="f">İngilizce ad<input id="c-en" value="' + esc(tg(c, 'en', 'name')) + '"></label><label class="f">Arapça ad<input id="c-ar" dir="rtl" value="' + esc(tg(c, 'ar', 'name')) + '"></label></div><b style="font-size:13px;color:#7a7167">Kapak fotoğrafı</b>' +
+      '<div class="imgs" style="margin-top:8px"><div class="im main" style="width:150px;height:150px"><img id="c-prev" src="' + esc(U(c.image)) + '" alt=""></div></div>' +
+      '<div class="row" style="margin-bottom:16px;flex-wrap:wrap"><label class="btn sm">Fotoğraf yükle<input id="c-file" type="file" accept="image/*" hidden></label><input id="c-url" placeholder="veya yol: img/kapak.jpg" style="flex:1;min-width:160px;padding:7px 10px;border:1px solid #e5dfd6;border-radius:10px"></div>' +
+      '<div class="row" style="justify-content:flex-end"><button class="btn" id="c-cancel">İptal</button><button class="btn pri" id="c-save">Kaydet</button></div>');
+    $('#c-file').onchange = function (e) { if (e.target.files[0]) addPhoto(e.target.files[0], 900).then(function (path) { c.image = path; $('#c-prev').src = U(path); }); };
+    $('#c-url').oninput = function (e) { if (e.target.value.trim()) { c.image = e.target.value.trim(); $('#c-prev').src = c.image; } };
+    $('#c-cancel').onclick = closeModal;
+    $('#c-save').onclick = function () { var n = $('#c-name').value.trim(); if (!n) return toast('Kategori adı gerekli'); c.name = n; setTg(c, 'en', 'name', $('#c-en').value.trim()); setTg(c, 'ar', 'name', $('#c-ar').value.trim()); var i = D.categories.map(function (x) { return x.id; }).indexOf(c.id); if (i < 0) D.categories.push(c); else D.categories[i] = c; if (save()) { closeModal(); render(); } };
+  }
+
+  /* ---------- ayarlar ---------- */
+  function tabSettings(body) {
+    var s = D.settings, fld = function (k, label, type) { return '<label class="f">' + label + '<input data-k="' + k + '" type="' + (type || 'text') + '" value="' + esc(s[k]) + '"></label>'; };
+    body.innerHTML = '<div class="card"><h3>İşletme bilgileri</h3><div class="grid2">' + fld('businessName', 'İşletme adı') + fld('tagline', 'Slogan / alt yazı') + fld('logoText', 'Logo harfleri (örn. LD)') + fld('currency', 'Para birimi (Türkçe sürüm)') + '</div></div>' +
+      '<div class="card"><h3>Diller & Dolar</h3><div class="checks">' + [['tr', 'Türkçe'], ['en', 'English'], ['ar', 'العربية']].map(function (x) { return '<label><input type="checkbox" data-lg="' + x[0] + '"' + ((s.langs || ['tr', 'en', 'ar']).indexOf(x[0]) > -1 ? ' checked' : '') + '> ' + x[1] + '</label>'; }).join('') + '</div><div class="grid2">' + fld('usdRate', '1 Dolar kaç TL? (İngilizce/Arapça fiyatlar buna göre hesaplanır)', 'number') + '<label class="f">Varsayılan dil<select data-k="defaultLang">' + [['tr', 'Türkçe'], ['en', 'English'], ['ar', 'العربية']].map(function (x) { return '<option value="' + x[0] + '"' + ((s.defaultLang || 'tr') === x[0] ? ' selected' : '') + '>' + x[1] + '</option>'; }).join('') + '</select></label></div><small style="color:#7a7167">Dolar fiyatını tek tek yazmak isterseniz ürün düzenleme ekranındaki $ alanını kullanın.</small></div>' +
+      ['en', 'ar'].map(function (l) { var f2 = function (k, label) { return '<label class="f">' + label + '<input data-t="' + l + '.' + k + '" ' + (l === 'ar' ? 'dir="rtl" ' : '') + 'value="' + esc(tg(s, l, k)) + '"></label>'; }; return '<div class="card"><h3>' + LN[l] + ' site yazıları</h3><div class="grid2">' + f2('tagline', 'Slogan') + f2('categoriesTitle', 'Ana başlık') + f2('featuredTitle', 'Öne çıkanlar başlığı') + f2('searchPlaceholder', 'Arama kutusu') + f2('address', 'Adres') + f2('wifi', 'Wi-Fi bilgisi') + '</div>' + f2('marquee', 'Kayan yazı') + f2('footerText', 'Alt bilgi yazısı') + '</div>'; }).join('') +
+      '<div class="card"><h3>Menü yazıları</h3><div class="grid2">' + fld('categoriesTitle', 'Ana başlık (örn. Menü)') + fld('featuredTitle', 'Öne çıkanlar başlığı') + fld('searchPlaceholder', 'Arama kutusu yazısı') + '</div>' + fld('marquee', 'Kayan yazı (boş bırakırsanız gizlenir)') +
+      '<div class="checks"><label><input type="checkbox" data-k="showFeatured"' + (s.showFeatured !== false ? ' checked' : '') + '> "Öne çıkanlar" bölümünü göster</label></div></div>' +
+      '<div class="card"><h3>Görünüm</h3><label class="f" style="max-width:200px">Vurgu rengi<input data-k="accent" type="color" value="' + esc(s.accent) + '"></label></div>' +
+      '<div class="card"><h3>İletişim & alt bilgi</h3><div class="grid2">' + fld('phone', 'Telefon') + fld('instagram', 'Instagram') + fld('address', 'Adres') + fld('wifi', 'Wi-Fi bilgisi') + '</div>' + fld('footerText', 'Alt bilgi yazısı') + '</div>' +
+      '<div class="card"><h3>Panel şifresi</h3>' + fld('adminPassword', 'Şifre') + '<small style="color:#7a7167">Statik sitede çalıştığı için bu şifre kazara girişi engeller; gerçek güvenlik katmanı değildir.</small></div><button class="btn pri" id="ss">Kaydet</button>';
+    $('#ss').onclick = function () { [].forEach.call(body.querySelectorAll('[data-k]'), function (i) { s[i.dataset.k] = i.type === 'checkbox' ? i.checked : (i.type === 'number' ? (parseFloat(i.value) || 0) : i.value); }); s.langs = [].map.call(body.querySelectorAll('[data-lg]:checked'), function (x) { return x.dataset.lg; }); if (!s.langs.length) s.langs = ['tr']; [].forEach.call(body.querySelectorAll('[data-t]'), function (i) { var q = i.dataset.t.split('.'); setTg(s, q[0], q[1], i.value); }); if (save()) render(); };
+  }
+
+  /* ---------- yayınla ---------- */
+  function download(name, blob) { var a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = name; document.body.appendChild(a); a.click(); a.remove(); setTimeout(function () { URL.revokeObjectURL(a.href); }, 3000); }
+  function tabPublish(body) {
+    var guess = location.protocol.indexOf('http') === 0 ? location.href.replace(/#.*$/, '') : 'https://KULLANICI.github.io/REPO/';
+    body.innerHTML = '<div class="note"><b>Önemli:</b> Panelde yaptığınız değişiklikler bu tarayıcıda <b>taslak</b> olarak durur. Müşterilerin görmesi için <b>Yayın paketini</b> indirip içindekileri GitHub repoya yükleyin.</div>' +
+      '<div class="card"><h3>1) Yayınla</h3><div class="row" style="flex-wrap:wrap"><button class="btn acc" id="dl">Yayın paketini indir (.zip)</button><span style="color:#7a7167">menu.js + yüklediğiniz fotoğraflar ve 3D modeller</span></div>' +
+      '<ol class="steps" style="margin-bottom:0"><li>Zip\'i açın</li><li>GitHub repoda <b>Add file → Upload files</b> ile açılan klasörleri/dosyaları repo köküne sürükleyin (aynı isimli <code>data/menu.js</code> değişir)</li><li>Commit changes → 1-2 dk sonra menü güncellenir</li></ol></div>' +
+      '<div class="card"><h3>2) QR Kod</h3><label class="f">Menü sitenizin adresi<input id="qu" value="' + esc(guess) + '"></label><div class="qr"><img id="qi" alt="QR"><div><button class="btn" id="qd">QR\'ı indir (PNG)</button><p style="color:#7a7167;max-width:330px">Adresi GitHub Pages linkinizle değiştirin (örn. <code>https://kullanici.github.io/qr-menu/</code>). QR görseli api.qrserver.com üzerinden üretilir, internet gerekir.</p></div></div></div>' +
+      '<div class="card"><h3>3) Yedek / Geri yükle</h3><div class="row" style="flex-wrap:wrap"><label class="btn">menu.js içe aktar<input id="imp" type="file" accept=".js,.json,.txt" hidden></label><button class="btn del" id="rs">Taslağı sil, yayındaki menüye dön</button></div></div>';
+    var qr = function () { $('#qi').src = 'https://api.qrserver.com/v1/create-qr-code/?size=480x480&margin=10&data=' + encodeURIComponent($('#qu').value); };
+    qr(); $('#qu').onchange = qr;
+    $('#qd').onclick = function () { var a = document.createElement('a'); a.href = $('#qi').src + '&format=png'; a.target = '_blank'; a.download = 'menu-qr.png'; a.click(); };
+    $('#dl').onclick = function () { Store.buildPackage(D).then(function (r) { download('yayin-paketi.zip', r.blob); toast('İndirildi (' + r.count + ' dosya) — zip içindekileri GitHub\'a yükleyin'); }); };
+    $('#imp').onchange = function (e) { var f = e.target.files[0]; if (!f) return; var fr = new FileReader(); fr.onload = function () { try { D = Store.parseImport(fr.result); save('İçe aktarıldı'); render(); } catch (er) { toast('Hata: ' + er.message); } }; fr.readAsText(f); };
+    $('#rs').onclick = function () { if (confirm('Bu tarayıcıdaki taslak ve yüklenen dosyalar silinsin mi?')) { Store.reset(); Store.clearAssets(); D = Store.get(); toast('Sıfırlandı'); render(); } };
+  }
+
+  return { mount: mount, refresh: refresh };
+})();
+
+</script>
+  <script>
+(function () {
+  'use strict';
+  var D, S;
+  var app = document.getElementById('app'), sheet = document.getElementById('sheet'), arEl = document.getElementById('ar'), adminEl = document.getElementById('admin');
+  var internalNav = false, adminMounted = false, io = null;
+
+  var esc = function (s) { return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); };
+  var U = function (p) { return Store.url(p); };
+  var catById = function (id) { return D.categories.filter(function (c) { return c.id === id; })[0]; };
+  var prodById = function (id) { return D.products.filter(function (p) { return p.id === id; })[0]; };
+  var visible = function (p) { return p.available !== false; };
+
+  var L = 'tr', LANGS = [['tr', 'TR'], ['en', 'EN'], ['ar', 'ع']];
+  var UI = {
+    tr: { nw: 'Yeni', camp: 'Kampanya', off: function (x) { return '%' + x + ' indirim'; }, open: 'Açık', none: 'Sonuç bulunamadı', items: 'ürün', cats: 'Kategoriler', secs: 'bölüm', ing: 'İçindekiler', back: 'Geri', close: 'Kapat', empty: 'Bu kategoride henüz ürün yok', admin: 'Yönetim', tel: 'Tel' },
+    en: { nw: 'New', camp: 'Deal', off: function (x) { return x + '% off'; }, open: 'Open', none: 'No results found', items: 'items', cats: 'Categories', secs: 'sections', ing: 'Ingredients', back: 'Back', close: 'Close', empty: 'No products in this category yet', admin: 'Admin', tel: 'Tel' },
+    ar: { nw: 'جديد', camp: 'عرض', off: function (x) { return 'خصم ' + x + '%'; }, open: 'مفتوح', none: 'لا توجد نتائج', items: 'منتج', cats: 'الأقسام', secs: 'قسم', ing: 'المكونات', back: 'رجوع', close: 'إغلاق', empty: 'لا توجد منتجات في هذا القسم بعد', admin: 'الإدارة', tel: 'هاتف' }
+  };
+  var t = function (k) { var v = (UI[L] || UI.tr)[k]; return v === undefined ? UI.tr[k] : v; };
+  function tx(o, k) { if (L !== 'tr') { var i = o.i18n && o.i18n[L], v = i && i[k]; if (v != null && v !== '' && !(Array.isArray(v) && !v.length)) return v; } return o[k]; }
+  function enabledLangs() { var l = (S && S.langs) || ['tr', 'en', 'ar']; return LANGS.filter(function (x) { return l.indexOf(x[0]) > -1; }); }
+  function pickLang() {
+    var s = null; try { s = localStorage.getItem('qrmenu_lang'); } catch (e) { }
+    var ok = enabledLangs().map(function (x) { return x[0]; });
+    if (s && ok.indexOf(s) > -1) return s;
+    var nav = ((navigator.language || 'tr') + '').slice(0, 2).toLowerCase();
+    if (nav !== 'tr' && ok.indexOf(nav) > -1) return nav;
+    if (nav !== 'tr' && ok.indexOf('en') > -1) return 'en';
+    var d = S.defaultLang || 'tr'; return ok.indexOf(d) > -1 ? d : (ok[0] || 'tr');
+  }
+  function applyLang() { var h = document.documentElement; h.lang = L; h.dir = L === 'ar' ? 'rtl' : 'ltr'; }
+  function money(v, usd) {
+    if (L === 'tr') { var n = Number(v); return (Number.isInteger(n) ? String(n) : n.toFixed(2).replace('.', ',')) + ' ' + (S.currency || '₺'); }
+    var u = usd > 0 ? Number(usd) : Math.max(0.25, Math.round(Number(v) / (Number(S.usdRate) || 43) * 4) / 4);
+    return '<bdi>$' + (Number.isInteger(u) ? String(u) : u.toFixed(2)) + '</bdi>';
+  }
+  function onSale(p) { return p.salePrice && Number(p.salePrice) > 0 && Number(p.salePrice) < Number(p.price); }
+  function priceHtml(p) { return onSale(p) ? '<div class="pr"><b class="sale">' + money(p.salePrice, p.salePriceUSD) + '</b><s>' + money(p.price, p.priceUSD) + '</s></div>' : '<div class="pr"><b>' + money(p.price, p.priceUSD) + '</b></div>'; }
+  function badges(p) {
+    var h = '';
+    if (p.isNew) h += '<span class="badge new">' + t('nw') + '</span>';
+    if (p.isCampaign) h += '<span class="badge camp">' + t('camp') + '</span>';
+    if (onSale(p)) h += '<span class="badge off">' + t('off')(Math.round((1 - p.salePrice / p.price) * 100)) + '</span>';
+    return h ? '<div class="badges">' + h + '</div>' : '';
+  }
+  var mainImg = function (p) { return p.images && p.images[0] ? p.images[0] : ''; };
+
+  var ic = {
+    search: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>',
+    back: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg>',
+    go: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M7 17 17 7M8 7h9v9"/></svg>',
+    cube: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="m12 2 9 5v10l-9 5-9-5V7z"/><path d="m3 7 9 5 9-5M12 12v10"/></svg>',
+    close: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M6 6l12 12M18 6 6 18"/></svg>',
+    rot: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-3-6.7"/><path d="M21 4v5h-5"/></svg>'
+  };
+
+  function applyTheme() { document.documentElement.style.setProperty('--accent', S.accent || '#ff6a2b'); document.title = (tx(S, 'businessName') || 'Menü') + ' • ' + (tx(S, 'categoriesTitle') || 'Menü'); applyLang(); }
+
+  /* reveal + tilt */
+  function observe() {
+    if (io) io.disconnect();
+    var els = document.querySelectorAll('#app .rv');
+    if (!('IntersectionObserver' in window)) { [].forEach.call(els, function (e) { e.classList.add('in'); }); return; }
+    io = new IntersectionObserver(function (en) { en.forEach(function (e) { if (e.isIntersecting) { e.target.classList.add('in'); io.unobserve(e.target); } }); }, { threshold: 0.08 });
+    [].forEach.call(els, function (e) { io.observe(e); });
+  }
+  function tilt() {
+    if (!window.matchMedia || !matchMedia('(hover:hover)').matches) return;
+    [].forEach.call(document.querySelectorAll('.cat'), function (c) {
+      c.addEventListener('pointermove', function (e) { var r = c.getBoundingClientRect(), x = (e.clientX - r.left) / r.width - .5, y = (e.clientY - r.top) / r.height - .5; c.style.transform = 'rotateY(' + (x * 10) + 'deg) rotateX(' + (-y * 10) + 'deg) translateZ(6px)'; });
+      c.addEventListener('pointerleave', function () { c.style.transform = ''; });
+    });
+  }
+  window.addEventListener('pointermove', function (e) { var r = document.documentElement.style; r.setProperty('--mx', e.clientX + 'px'); r.setProperty('--my', e.clientY + 'px'); }, { passive: true });
+
+  /* ---------- sayfalar ---------- */
+  function productRow(p, i) {
+    var img = mainImg(p);
+    return '<button class="row rv' + (visible(p) ? '' : ' out') + '" data-p="' + esc(p.id) + '" style="--d:' + (i % 6 * 70) + 'ms"><div class="ph">' + (img ? '<img src="' + esc(U(img)) + '" alt="" loading="lazy">' : '') + '</div>' +
+      '<div class="info"><h3>' + esc(tx(p, 'name')) + '</h3><p>' + esc(tx(p, 'desc')) + '</p>' + badges(p) + '<div class="foot">' + priceHtml(p) + '</div></div></button>';
+  }
+  function footer() {
+    var l = [];
+    if (S.phone) l.push(t('tel') + ' · <bdi>' + esc(S.phone) + '</bdi>'); if (S.instagram) l.push(esc(S.instagram)); if (tx(S, 'wifi')) l.push(esc(tx(S, 'wifi')));
+    return '<footer>' + (l.length ? '<div class="lk">' + l.map(function (x) { return '<span>' + x + '</span>'; }).join('') + '</div>' : '') + (tx(S, 'address') ? esc(tx(S, 'address')) + '<br>' : '') + esc(tx(S, 'footerText') || '') + '<br><a class="own" href="#yonetim">' + t('admin') + '</a></footer>';
+  }
+  function langSwitch() {
+    var ls = enabledLangs(); if (ls.length < 2) return '';
+    return '<div class="lang" role="group" aria-label="Language">' + ls.map(function (x) { return '<button data-lang="' + x[0] + '"' + (x[0] === L ? ' class="on"' : '') + '>' + x[1] + '</button>'; }).join('') + '</div>';
+  }
+  function topbar() {
+    return '<div class="top"><div class="brand"><div class="mark">' + esc(S.logoText || (S.businessName || 'M').slice(0, 2)) + '</div><div><b>' + esc(tx(S, 'businessName')) + '</b><small>' + esc(tx(S, 'tagline')) + '</small></div></div><div class="tr-end">' + langSwitch() + '<div class="open"><i></i>' + t('open') + '</div></div></div>';
+  }
+
+  function renderHome() {
+    var feat = D.products.filter(function (p) { return visible(p) && (p.isNew || p.isCampaign || onSale(p)); });
+    var mq = esc(tx(S, 'marquee') || '').replace(/•/g, '<b>•</b>');
+    app.innerHTML = topbar() +
+      '<h1 class="headline"><span><em>' + esc(tx(S, 'categoriesTitle') || 'Menü') + '</em></span><span><em>' + esc(tx(S, 'businessName')) + '</em></span></h1>' +
+      (tx(S, 'marquee') ? '<div class="marquee"><div class="track"><span>' + mq + mq + '</span><span>' + mq + mq + '</span></div></div>' : '') +
+      '<div class="search">' + ic.search + '<input id="q" type="search" placeholder="' + esc(tx(S, 'searchPlaceholder')) + '" autocomplete="off"></div><div id="home-body">' + homeBody(feat) + '</div>' + footer();
+    document.getElementById('q').addEventListener('input', function (e) {
+      var q = e.target.value.trim().toLocaleLowerCase(L), box = document.getElementById('home-body');
+      if (!q) { box.innerHTML = homeBody(feat); observe(); tilt(); return; }
+      var res = D.products.filter(function (p) { return visible(p) && (p.name + ' ' + p.desc + ' ' + p.ingredients.join(' ') + ' ' + tx(p, 'name') + ' ' + tx(p, 'desc') + ' ' + (tx(p, 'ingredients') || []).join(' ')).toLocaleLowerCase(L).indexOf(q) > -1; });
+      box.innerHTML = res.length ? '<div class="list">' + res.map(productRow).join('') + '</div>' : '<div class="empty">' + t('none') + '</div>';
+      observe();
+    });
+    observe(); tilt(); window.scrollTo(0, 0);
+  }
+  function homeBody(feat) {
+    var h = '';
+    if (S.showFeatured !== false && feat.length) {
+      h += '<div class="sec"><h2>' + esc(tx(S, 'featuredTitle')) + '</h2><span>' + feat.length + ' ' + t('items') + '</span></div><div class="rail">' + feat.map(function (p) {
+        return '<button class="fcard" data-p="' + esc(p.id) + '"><img src="' + esc(U(mainImg(p))) + '" alt="" loading="lazy">' + badges(p) + '<div class="in"><b>' + esc(tx(p, 'name')) + '</b>' + priceHtml(p) + '</div></button>';
+      }).join('') + '</div>';
+    }
+    h += '<div class="sec"><h2>' + t('cats') + '</h2><span>' + D.categories.length + ' ' + t('secs') + '</span></div><div class="cat-grid">' + D.categories.map(function (c, i) {
+      var n = D.products.filter(function (p) { return p.categoryId === c.id && visible(p); }).length;
+      return '<button class="cat rv" data-c="' + esc(c.id) + '" style="--d:' + (i % 2 * 90 + Math.floor(i / 2) * 60) + 'ms"><img src="' + esc(U(c.image)) + '" alt="" loading="lazy"><span class="no">' + String(i + 1).padStart(2, '0') + '</span><span class="go">' + ic.go + '</span><span class="lbl"><b>' + esc(tx(c, 'name')) + '</b><small>' + n + ' ' + t('items') + '</small></span></button>';
+    }).join('') + '</div>';
+    return h;
+  }
+  function renderCategory(id) {
+    var c = catById(id); if (!c) { location.hash = ''; return; }
+    var items = D.products.filter(function (p) { return p.categoryId === id; });
+    app.innerHTML = '<div class="bar"><div class="bar-row"><button class="back" data-back aria-label="' + t('back') + '">' + ic.back + '</button><h2>' + esc(tx(c, 'name')) + '</h2></div><div class="chips">' +
+      D.categories.map(function (x) { return '<button class="chip' + (x.id === id ? ' on' : '') + '" data-c="' + esc(x.id) + '">' + esc(tx(x, 'name')) + '</button>'; }).join('') + '</div></div>' +
+      '<div class="list">' + (items.length ? items.map(productRow).join('') : '<div class="empty">' + t('empty') + '</div>') + '</div>' + footer();
+    var on = app.querySelector('.chip.on'); if (on && on.scrollIntoView) on.scrollIntoView({ inline: 'center', block: 'nearest' });
+    observe(); window.scrollTo(0, 0);
+  }
+
+  /* ---------- ürün sayfası ---------- */
+  var curMode = 'photo', spinTimer = null;
+  function loadPreviewModel(p, cb) { // yalnızca ön izleme ortamında (modeller js olarak gömülü)
+    if (window.PREVIEW_MODELS && p.model && !(window.MODEL_B64 && window.MODEL_B64[p.model])) {
+      var s = document.createElement('script'); s.src = 'js/mp/' + p.model.replace(/^models\//, '').replace(/\.glb$/, '') + '.js'; s.onload = cb; s.onerror = cb; document.head.appendChild(s);
+    } else cb();
+  }
+  function modelUrl(p) {
+    if (window.MODEL_B64 && window.MODEL_B64[p.model]) {
+      var bin = atob(window.MODEL_B64[p.model]), u8 = new Uint8Array(bin.length); for (var i = 0; i < bin.length; i++) u8[i] = bin.charCodeAt(i);
+      return URL.createObjectURL(new Blob([u8], { type: 'model/gltf-binary' }));
+    }
+    return U(p.model);
+  }
+  var mvOK = function () { return window.customElements && customElements.get('model-viewer'); };
+  function modesOf(p) {
+    var m = [];
+    if (p.spin && p.spin.length > 3) m.push(['spin', '360°']);
+    if (p.model && mvOK()) m.push(['model', '3D']);
+    if (mainImg(p)) m.push(['photo', 'Fotoğraf']);
+    return m;
+  }
+  function mvAttrs(p, visible) {
+    var card = p.modelType !== 'scan';
+    return 'src="' + esc(modelUrl(p)) + '"' + (p.modelIos ? ' ios-src="' + esc(U(p.modelIos)) + '"' : '') + ' alt="' + esc(p.name) + '" ar ar-modes="webxr scene-viewer quick-look" ar-placement="floor" ar-scale="auto" shadow-intensity="1.1" shadow-softness=".9" exposure="1.05"' +
+      (visible ? ' camera-controls touch-action="pan-y" ' + (card ? 'camera-orbit="0deg 80deg auto" min-camera-orbit="-60deg 55deg auto" max-camera-orbit="60deg 100deg auto"' : 'auto-rotate auto-rotate-delay="500" rotation-per-second="22deg" camera-orbit="25deg 78deg auto"') : '');
+  }
+  function stopSpin() { if (spinTimer) { clearInterval(spinTimer); spinTimer = null; } }
+  function setStage(p, mode, idx) {
+    stopSpin(); curMode = mode; var box = document.getElementById('stage-in'); if (!box) return;
+    if (mode === 'model') {
+      box.innerHTML = '<model-viewer ' + mvAttrs(p, true) + '><button slot="ar-button" style="display:none"></button></model-viewer><div class="hint">' + ic.rot + (p.modelType === 'scan' ? ' Sürükle · 360°' : ' Sürükle · yan açıdan bak') + '</div>';
+      var mv = box.querySelector('model-viewer');
+      if (p.modelType !== 'scan' && mv) { var t0 = performance.now(), stop = false; mv.addEventListener('camera-change', function (e) { if (e.detail && e.detail.source === 'user-interaction') stop = true; }); (function f() { if (stop || !mv.isConnected) return; mv.cameraOrbit = (Math.sin((performance.now() - t0) / 1500) * 30).toFixed(1) + 'deg 80deg auto'; requestAnimationFrame(f); })(); }
+    } else if (mode === 'spin') {
+      var fr = p.spin, n = fr.length; box.innerHTML = '<div class="spin" id="spin"><img src="' + esc(U(fr[0])) + '" alt="" draggable="false"></div><div class="hint">' + ic.rot + ' Sürükle · 360°</div>';
+      fr.forEach(function (f) { var im = new Image(); im.src = U(f); });
+      var el = document.getElementById('spin'), img = el.querySelector('img'), cur = 0, drag = false, lx = 0, acc = 0;
+      function show(i) { cur = ((i % n) + n) % n; img.src = U(fr[cur]); }
+      el.addEventListener('pointerdown', function (e) { drag = true; lx = e.clientX; stopSpin(); el.setPointerCapture(e.pointerId); box.querySelector('.hint').style.opacity = 0; });
+      el.addEventListener('pointermove', function (e) { if (!drag) return; acc += (e.clientX - lx) * (n / (el.clientWidth * 0.9)); lx = e.clientX; if (Math.abs(acc) >= 1) { show(cur - Math.trunc(acc)); acc -= Math.trunc(acc); } });
+      var up = function () { drag = false; }; el.addEventListener('pointerup', up); el.addEventListener('pointercancel', up);
+      spinTimer = setInterval(function () { if (!drag) show(cur + 1); }, 110);
+    } else {
+      box.innerHTML = '<div class="photo"><img src="' + esc(U(p.images[idx || 0] || '')) + '" alt=""></div>';
+    }
+  }
+  function openSheet(id) {
+    var p = prodById(id); if (!p) return;
+    loadPreviewModel(p, function () {
+      var modes = [], first = 'photo', hasM = false;
+      var thumbs = (p.images || []).length > 1 ? '<div class="thumbs" id="thumbs">' + p.images.map(function (s, i) { return '<button class="thumb' + (i ? '' : ' on') + '" data-img="' + i + '"><img src="' + esc(U(s)) + '" alt=""></button>'; }).join('') + '</div>' : '';
+      sheet.innerHTML = '<div class="sheet-bg" data-close></div><div class="sheet"><button class="close" data-close aria-label="' + t('close') + '">' + ic.close + '</button>' +
+        '<div class="stage" id="stage">' + (modes.length > 1 ? '<div class="seg">' + modes.map(function (m, i) { return '<button' + (i ? '' : ' class="on"') + ' data-mode="' + m[0] + '">' + m[1] + '</button>'; }).join('') + '</div>' : '') + '<div id="stage-in" style="position:absolute;inset:0"></div>' +
+        (hasM ? '<model-viewer id="armv" ' + mvAttrs(p, false) + ' style="position:absolute;width:2px;height:2px;opacity:0;pointer-events:none;left:0;top:0"><button slot="ar-button" style="display:none"></button></model-viewer>' : '') + '</div>' + thumbs +
+        '<div class="pbody">' + badges(p) + '<h2>' + esc(tx(p, 'name')) + '</h2>' + priceHtml(p) + (tx(p, 'desc') ? '<p>' + esc(tx(p, 'desc')) + '</p>' : '') +
+        ((tx(p, 'ingredients') || []).length ? '<h4>' + t('ing') + '</h4><div class="ing">' + tx(p, 'ingredients').map(function (x) { return '<span>' + esc(x) + '</span>'; }).join('') + '</div>' : '') +
+        (false ? '<button class="ar-btn" data-ar="' + esc(p.id) + '">' + ic.cube + ' ' + esc(S.arButtonText || 'Masanda Gör') + '</button><div class="ar-note">Telefon kamerasıyla ürünü masanda gör</div>' : '') + '</div></div>';
+      sheet.dataset.pid = p.id; sheet.classList.add('on'); document.body.style.overflow = 'hidden'; setStage(p, first, 0);
+    });
+  }
+  function closeSheetUI() { stopSpin(); sheet.classList.remove('on'); document.body.style.overflow = ''; setTimeout(function () { if (!sheet.classList.contains('on')) sheet.innerHTML = ''; }, 600); }
+
+  /* ---------- Masanda gör ---------- */
+  var arStream = null;
+  function openAR(id) {
+    var p = prodById(id); if (!p) return;
+    var src = U(p.cutout || mainImg(p));
+    arEl.innerHTML = '<div class="nocam"></div><video playsinline muted autoplay></video><div class="item" id="ar-item"><img src="' + esc(src) + '" alt=""></div>' +
+      '<div class="top2"><b>' + esc(p.name) + '</b><button id="ar-close" aria-label="' + t('close') + '">' + ic.close + '</button></div><div class="tip" id="ar-tip">Kamerayı masanıza doğrultun · Sürükleyin, iki parmakla büyütün/döndürün</div>' +
+      '<div class="panel"><label><span>Boyut</span><input type="range" id="ar-size" min="30" max="260" value="100"></label><label><span>Döndür</span><input type="range" id="ar-rot" min="-40" max="40" value="0"></label><label><span>Şeffaflık</span><input type="range" id="ar-op" min="35" max="100" value="96"></label></div>';
+    arEl.classList.add('on');
+    var video = arEl.querySelector('video'), nocam = arEl.querySelector('.nocam'), item = document.getElementById('ar-item'), tip = document.getElementById('ar-tip');
+    var st = { x: innerWidth / 2, y: innerHeight * 0.52, s: 1, r: 0, o: 0.96 };
+    function paint() { var w = item.offsetWidth, h = item.offsetHeight; item.style.opacity = st.o; item.style.transform = 'translate(' + (st.x - w / 2) + 'px,' + (st.y - h / 2) + 'px) rotate(' + st.r + 'deg) scale(' + st.s + ')'; }
+    item.querySelector('img').onload = paint; paint();
+    if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+      navigator.mediaDevices.getUserMedia({ video: { facingMode: { ideal: 'environment' } }, audio: false }).then(function (s) { arStream = s; video.srcObject = s; video.play(); nocam.style.display = 'none'; })
+        .catch(function () { tip.textContent = 'Kamera izni verilmedi — masa dokusu üzerinde gösteriliyor.'; });
+    } else tip.textContent = 'Bu cihazda kamera erişimi yok (HTTPS gerekir).';
+    setTimeout(function () { tip.style.opacity = 0; }, 6500);
+    var ptrs = {}, sD = 0, sA = 0, sS = 1, sR = 0;
+    item.addEventListener('pointerdown', function (e) { item.setPointerCapture(e.pointerId); ptrs[e.pointerId] = { x: e.clientX, y: e.clientY }; var k = Object.keys(ptrs); if (k.length === 2) { var a = ptrs[k[0]], b = ptrs[k[1]]; sD = Math.hypot(a.x - b.x, a.y - b.y); sA = Math.atan2(b.y - a.y, b.x - a.x); sS = st.s; sR = st.r; } });
+    item.addEventListener('pointermove', function (e) {
+      if (!ptrs[e.pointerId]) return; var k = Object.keys(ptrs);
+      if (k.length === 1) { st.x += e.clientX - ptrs[e.pointerId].x; st.y += e.clientY - ptrs[e.pointerId].y; }
+      ptrs[e.pointerId] = { x: e.clientX, y: e.clientY };
+      if (k.length === 2) { var a = ptrs[k[0]], b = ptrs[k[1]]; st.s = Math.min(2.6, Math.max(.3, sS * Math.hypot(a.x - b.x, a.y - b.y) / sD)); st.r = sR + (Math.atan2(b.y - a.y, b.x - a.x) - sA) * 180 / Math.PI; document.getElementById('ar-size').value = st.s * 100; }
+      paint();
+    });
+    function end(e) { delete ptrs[e.pointerId]; }
+    item.addEventListener('pointerup', end); item.addEventListener('pointercancel', end);
+    document.getElementById('ar-size').oninput = function (e) { st.s = e.target.value / 100; paint(); };
+    document.getElementById('ar-rot').oninput = function (e) { st.r = +e.target.value; paint(); };
+    document.getElementById('ar-op').oninput = function (e) { st.o = e.target.value / 100; paint(); };
+    document.getElementById('ar-close').onclick = closeAR;
+  }
+  function closeAR() { if (arStream) { arStream.getTracks().forEach(function (t) { t.stop(); }); arStream = null; } arEl.classList.remove('on'); arEl.innerHTML = ''; }
+
+  /* ---------- yönlendirme (düz #isim biçimi) ---------- */
+  function showAdmin() {
+    closeSheetUI(); closeAR(); document.body.classList.add('admin-mode'); adminEl.hidden = false;
+    if (!adminMounted) { adminMounted = true; Admin.mount(adminEl); } else Admin.refresh();
+    window.scrollTo(0, 0);
+  }
+  function route() {
+    var h = location.hash || '', m;
+    if (h === '#yonetim') { showAdmin(); return; }
+    if (!adminEl.hidden) { adminEl.hidden = true; document.body.classList.remove('admin-mode'); D = Store.get(); S = D.settings; applyTheme(); app.innerHTML = ''; }
+    if ((m = h.match(/^#p-(.+)$/))) {
+      var p = prodById(decodeURIComponent(m[1])); if (!p) { location.hash = ''; return; }
+      if (!app.innerHTML) renderCategory(p.categoryId);
+      openSheet(p.id); return;
+    }
+    closeSheetUI();
+    if ((m = h.match(/^#c-(.+)$/))) renderCategory(decodeURIComponent(m[1])); else renderHome();
+  }
+  function setLang(l) { L = l; try { localStorage.setItem('qrmenu_lang', l); } catch (e) { } applyTheme(); route(); }
+  function go(h) { internalNav = true; location.hash = h; }
+
+  document.addEventListener('click', function (e) {
+    var lb = e.target.closest('[data-lang]'); if (lb) { setLang(lb.dataset.lang); return; }
+    var t = e.target.closest('[data-p],[data-c],[data-back],[data-close],[data-ar],[data-img],[data-mode]'); if (!t) return;
+    if (t.dataset.mode) { var p0 = prodById(sheet.dataset.pid); [].forEach.call(document.querySelectorAll('.seg button'), function (b) { b.classList.toggle('on', b === t); }); setStage(p0, t.dataset.mode, 0); return; }
+    if (t.dataset.ar) { var mv = document.getElementById('armv'); if (mv && mv.canActivateAR) mv.activateAR(); else openAR(t.dataset.ar); return; }
+    if (t.dataset.img !== undefined && t.classList.contains('thumb')) {
+      [].forEach.call(document.querySelectorAll('.thumb'), function (x) { x.classList.remove('on'); }); t.classList.add('on');
+      var pp = prodById(sheet.dataset.pid); [].forEach.call(document.querySelectorAll('.seg button'), function (b) { b.classList.toggle('on', b.dataset.mode === 'photo'); }); setStage(pp, 'photo', +t.dataset.img); return;
+    }
+    if (t.dataset.p) { go('#p-' + encodeURIComponent(t.dataset.p)); return; }
+    if (t.dataset.c) { go('#c-' + encodeURIComponent(t.dataset.c)); return; }
+    if (t.hasAttribute('data-back')) { internalNav ? history.back() : (location.hash = ''); return; }
+    if (t.hasAttribute('data-close')) { if (internalNav) history.back(); else { var m = (location.hash.match(/^#p-(.+)$/) || [])[1], pr = m && prodById(decodeURIComponent(m)); location.hash = pr ? '#c-' + pr.categoryId : ''; } }
+  });
+  window.addEventListener('hashchange', route);
+  document.addEventListener('keydown', function (e) { if (e.key === 'Escape') { if (arEl.classList.contains('on')) closeAR(); else if (sheet.classList.contains('on')) history.back(); } });
+
+  var started = false;
+  function start() { if (started) return; started = true; D = Store.get(); S = D.settings; L = pickLang(); applyTheme(); route(); }
+  Store.ready().then(start, start); setTimeout(start, 3500);
+})();
+
+</script>
+<script>setTimeout(function(){var a=document.getElementById("app");if(a&&!a.innerHTML&&!location.hash.match(/yonetim/))a.innerHTML='<pre style="padding:20px;white-space:pre-wrap;color:#f88;font:13px monospace">Menü yüklenemedi / Failed to load. Sayfayı yenileyin (Ctrl+F5).</pre>'},6000)</script>
 </body>
 </html>
