@@ -1,0 +1,64 @@
+/* Yönetim paneli (index.html#yonetim) — tüm kurallar .adm altında, siteyle çakışmaz */
+.adm{--a-bg:#f3f0eb;--a-panel:#fff;--a-ink:#1b1814;--a-mute:#7a7167;--a-line:#e5dfd6;--a-acc:#e2551c;--a-danger:#d64545;
+  position:relative;min-height:100vh;background:var(--a-bg);color:var(--a-ink);font:14.5px/1.45 "DM Sans",-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif}
+.adm *{box-sizing:border-box}
+.adm[hidden]{display:none}
+.adm button,.adm input,.adm select,.adm textarea{font:inherit}
+.adm .login{min-height:100vh;display:grid;place-items:center;padding:20px}
+.adm .login .box{background:var(--a-panel);padding:34px;border-radius:24px;width:100%;max-width:390px;box-shadow:0 24px 70px rgba(0,0,0,.09);text-align:center}
+.adm .login h1{margin:0 0 4px;font-size:24px;letter-spacing:-.02em}.adm .login p{color:var(--a-mute);margin:0 0 20px}
+.adm .topbar{position:sticky;top:0;z-index:10;background:rgba(255,255,255,.92);backdrop-filter:blur(10px);border-bottom:1px solid var(--a-line);display:flex;align-items:center;gap:10px;padding:12px 18px;flex-wrap:wrap}
+.adm .topbar h1{font-size:17px;margin:0;flex:1;min-width:140px;letter-spacing:-.01em}
+.adm .wrap{max-width:1000px;margin:0 auto;padding:18px}
+.adm .tabs{display:flex;gap:6px;overflow-x:auto;margin-bottom:16px}
+.adm .tab{padding:10px 16px;border-radius:12px;background:transparent;border:1px solid transparent;cursor:pointer;color:var(--a-mute);white-space:nowrap;font-weight:600}
+.adm .tab.on{background:var(--a-panel);border-color:var(--a-line);color:var(--a-ink);box-shadow:0 2px 8px rgba(0,0,0,.05)}
+.adm .card{background:var(--a-panel);border:1px solid var(--a-line);border-radius:16px;padding:16px;margin-bottom:14px}
+.adm .card h3{margin:0 0 12px;font-size:16px}
+.adm .btn{padding:9px 16px;border-radius:10px;border:1px solid var(--a-line);background:var(--a-panel);cursor:pointer;font-weight:600;color:var(--a-ink);text-decoration:none;display:inline-block}
+.adm .btn:hover{border-color:#b9ae9e}
+.adm .btn.pri{background:var(--a-ink);color:#fff;border-color:var(--a-ink)}
+.adm .btn.acc{background:var(--a-acc);color:#fff;border-color:var(--a-acc)}
+.adm .btn.del{color:var(--a-danger)}
+.adm .btn.sm{padding:6px 11px;font-size:13px}
+.adm .btn[disabled]{opacity:.5;cursor:default}
+.adm .row{display:flex;gap:12px;align-items:center}
+.adm .toolbar{display:flex;gap:10px;align-items:center;justify-content:space-between;margin-bottom:12px;flex-wrap:wrap}
+.adm .item{display:flex;gap:12px;align-items:center;padding:10px;border:1px solid var(--a-line);border-radius:14px;margin-bottom:8px;background:#fff}
+.adm .item img{width:60px;height:60px;border-radius:12px;object-fit:cover;background:#2a241d;flex:none}
+.adm .item .meta{flex:1;min-width:0}.adm .item .meta b{display:block}.adm .item .meta small{color:var(--a-mute)}
+.adm .item .acts{display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end}
+.adm .tag{display:inline-block;font-size:11px;padding:2px 8px;border-radius:99px;background:#eee7da;margin-right:4px}
+.adm .tag.n{background:#e8f7b8;color:#3a4a0a}.adm .tag.c{background:#ffe0d2;color:#9a3410}.adm .tag.x{background:#ddd;color:#555}.adm .tag.d{background:#1b1814;color:#fff}
+.adm label.f{display:block;margin-bottom:12px;font-size:13px;color:var(--a-mute)}
+.adm label.f>input,.adm label.f>select,.adm label.f>textarea{display:block;width:100%;margin-top:5px;padding:10px 12px;border-radius:10px;border:1px solid var(--a-line);background:#fff;color:var(--a-ink)}
+.adm label.f>input[type=color]{padding:2px;height:42px}
+.adm textarea{min-height:80px;resize:vertical}
+.adm .grid2{display:grid;grid-template-columns:1fr 1fr;gap:0 14px}
+.adm .grid3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:0 14px}
+.adm .checks{display:flex;gap:16px;flex-wrap:wrap;margin:6px 0 14px}
+.adm .checks label{display:flex;gap:6px;align-items:center;cursor:pointer}
+.adm .imgs{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:10px}
+.adm .imgs .im{position:relative;width:96px;height:96px;border-radius:12px;overflow:hidden;border:2px solid var(--a-line);background:#2a241d}
+.adm .imgs .im.main{border-color:var(--a-acc)}
+.adm .imgs img{width:100%;height:100%;object-fit:cover}
+.adm .imgs .x{position:absolute;right:4px;top:4px;width:22px;height:22px;border-radius:50%;background:rgba(0,0,0,.65);color:#fff;border:0;cursor:pointer;line-height:1}
+.adm .imgs .mk{position:absolute;left:4px;bottom:4px;font-size:10px;background:rgba(0,0,0,.65);color:#fff;border:0;border-radius:6px;padding:2px 6px;cursor:pointer}
+.adm .box3d{border:1px dashed #cfc5b6;border-radius:16px;padding:14px;margin:4px 0 16px;background:#fbf9f6}
+.adm .box3d .pv{height:240px;border-radius:12px;overflow:hidden;background:radial-gradient(circle at 50% 45%,#4a3e33,#17130f);margin-bottom:12px;position:relative;display:grid;place-items:center;color:#cdbfae;font-size:13px;text-align:center;padding:10px}
+.adm .box3d .pv model-viewer{width:100%;height:100%;--poster-color:transparent;background:transparent}
+.adm .busy{position:absolute;inset:0;display:grid;place-items:center;background:rgba(0,0,0,.55);color:#fff;font-weight:700}
+.adm #modal .bg,.adm .modal .bg{position:fixed;inset:0;background:rgba(20,16,10,.6);z-index:200;display:grid;place-items:start center;overflow-y:auto;padding:30px 12px}
+.adm .dlg{background:var(--a-panel);border-radius:22px;width:100%;max-width:680px;padding:22px;box-shadow:0 30px 80px rgba(0,0,0,.3)}
+.adm .dlg h2{margin:0 0 14px;font-size:19px}
+.adm .toast{position:fixed;left:50%;bottom:24px;transform:translate(-50%,40px);background:var(--a-ink);color:#fff;padding:10px 18px;border-radius:99px;opacity:0;transition:.3s;z-index:300;pointer-events:none;max-width:90vw;text-align:center}
+.adm .toast.on{opacity:1;transform:translate(-50%,0)}
+.adm .note{background:#fff3df;border:1px solid #f1d9a8;color:#6b4f12;padding:12px 14px;border-radius:12px;line-height:1.55;font-size:13.5px;margin-bottom:14px}
+.adm .steps{padding-left:20px;line-height:1.8}
+.adm .qr{display:flex;gap:18px;align-items:center;flex-wrap:wrap}
+.adm .qr img{width:200px;height:200px;border:1px solid var(--a-line);border-radius:12px;background:#fff;padding:8px}
+.adm .dirty{background:#ffe7c9;color:#8a4a00;padding:4px 10px;border-radius:99px;font-size:12px;font-weight:700}
+.adm code{background:#f0ebe3;padding:1px 6px;border-radius:6px;font-size:12.5px}
+@media(max-width:600px){.adm .grid2,.adm .grid3{grid-template-columns:1fr}.adm .item{flex-wrap:wrap}.adm .item .acts{width:100%;justify-content:flex-start}}
+
+.adm .box3d,.adm label:has(#f-ar){display:none!important}
